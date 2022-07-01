@@ -1,9 +1,9 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#include <Arduino.h>
+// #include <Arduino.h>
 
-#define TABLE_HEAP_DEFAULT_SIZE 512 // Set a upper heap size limit, if a table can not fit, then return nullptr.
+#define TABLE_HEAP_DEFAULT_SIZE 2048 // Set a upper heap size limit, if a table can not fit, then return nullptr.
 
 static char _table_heap[TABLE_HEAP_DEFAULT_SIZE];
 static int _heap_pointer = 0;
@@ -44,13 +44,13 @@ static void reset_heap()
  *
  */
 template<typename T>
-class Table3D {
+class Table {
 public:
+    // 3d table
     void initilise(char x, char y)
     {
         this->values = (T**)heap_alloc(x * sizeof(T*));
         for (char i = 0; i < y; i++) { this->values[i] = (T*)heap_alloc(y * sizeof(T)); }
-
         this->axisX = (int*)heap_alloc(x * sizeof(int));
         this->axisY = (int*)heap_alloc(y * sizeof(int));
         this->xSize = x;
@@ -59,6 +59,12 @@ public:
         this->lastYInput = 1;
         this->cacheIsValid = false; //Invalid the tables cache to ensure a lookup of new values
     }
+    // 2d table
+    void initilise(char x)
+    {
+        initilise(x, 1);
+    }
+    // 3d table
     T getValue(int X_in, int Y_in)
     {
         int X = X_in;
@@ -273,6 +279,11 @@ public:
         return tableResult;
     }
 
+    // 2d table
+    T getValue(int X_in){
+        return getValue(X_in, 1);
+    }
+
     // table size
     char xSize;
     char ySize;
@@ -287,142 +298,6 @@ public:
     int lastXInput, lastYInput;
     T lastOutput;
     bool cacheIsValid; ///< This tracks whether the tables cache should be used. Ordinarily this is true, but is set to false whenever TunerStudio sends a new value for the table
-};
-
-template<typename T>
-class Table2D {
-public:
-    void initilise(char x)
-    {
-        this->values = (T*)heap_alloc(x * sizeof(T*));
-        this->axisX = (int*)heap_alloc(x * sizeof(int));
-        this->xSize = x;
-        this->lastInput = 1; // some what hacky...
-    }
-
-    T getValue(int X_in)
-    {
-        //Orig memory usage = 5414
-        T returnValue = 0;
-        bool valueFound = false;
-
-        int X = X_in;
-        int xMinValue, xMaxValue;
-        int xMin = 0;
-        int xMax = this->xSize - 1;
-
-        //Check whether the X input is the same as last time this ran
-        if ((X_in == this->lastInput) )//&& (this->cacheTime == currentStatus.secl))
-        {
-            returnValue = this->lastOutput;
-            valueFound = true;
-        }
-        //If the requested X value is greater/small than the maximum/minimum bin, simply return that value
-        else if (X >= this->getAxisValue(xMax))
-        {
-            returnValue = this->getRawValue(xMax);
-            valueFound = true;
-        }
-        else if (X <= this->getAxisValue(xMin))
-        {
-            returnValue = this->getRawValue(xMin);
-            valueFound = true;
-        }
-        //Finally if none of that is found
-        else
-        {
-            //this->cacheTime = currentStatus.secl; //As we're not using the cache value, set the current secl value to track when this new value was calc'd
-
-            //1st check is whether we're still in the same X bin as last time
-            xMaxValue = this->getAxisValue(this->lastXMax);
-            xMinValue = this->getAxisValue(this->lastXMin);
-            if ((X <= xMaxValue) && (X > xMinValue))
-            {
-                xMax = this->lastXMax;
-                xMin = this->lastXMin;
-            }
-            else
-            {
-                //If we're not in the same bin, loop through to find where we are
-                xMaxValue = this->getAxisValue(this->xSize - 1); // init xMaxValue in preparation for loop.
-                for (int x = this->xSize - 1; x > 0; x--)
-                {
-                    xMinValue = this->getAxisValue(x - 1); // fetch next Min
-
-                    //Checks the case where the X value is exactly what was requested
-                    if (X == xMaxValue)
-                    {
-                        returnValue = this->getRawValue(x); //Simply return the coresponding value
-                        valueFound = true;
-                        break;
-                    }
-                    else if (X > xMinValue)
-                    {
-                        // Value is in the current bin
-                        xMax = x;
-                        this->lastXMax = xMax;
-                        xMin = x - 1;
-                        this->lastXMin = xMin;
-                        break;
-                    }
-                    // Otherwise, continue to next bin
-                    xMaxValue = xMinValue; // for the next bin, our Min is their Max
-                }
-            }
-        } //X_in same as last time
-
-        if (valueFound == false)
-        {
-            float m = X - xMinValue;
-            float n = xMaxValue - xMinValue;
-
-            T yMax = this->getRawValue(xMax);
-            T yMin = this->getRawValue(xMin);
-
-            //Float version
-            
-            T yVal = (m / n) * (abs(yMax - yMin));
-            
-
-            //Non-Float version
-            // int16_t yVal = ((long)(m << 6) / n) * (abs(yMax - yMin));
-            // yVal = (yVal >> 6);
-
-            if (yMax > yMin) { yVal = yMin + yVal; }
-            else { yVal = yMin - yVal; }
-
-            returnValue = yVal;
-        }
-
-        this->lastInput = X_in;
-        this->lastOutput = returnValue;
-
-        return returnValue;
-    }
-private:
-    int getAxisValue(char X_index)
-    {
-        return this->axisX[X_index];
-    }
-    T getRawValue(char X_index)
-    {
-        return this->values[X_index];
-    }
-
-public:
-    // table size
-    char axisSize;
-    char xSize;
-    // table values
-    T* values;
-    int* axisX;
-    //Store the last X and Y coordinates in the table. This is used to make the next check faster
-    int lastXMax;
-    int lastXMin;
-    //Store the last input and output for caching
-    int lastInput;
-    T lastOutput;
-    char cacheTime;
 };
 
 #endif // TABLE_H
