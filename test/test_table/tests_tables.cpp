@@ -15,7 +15,7 @@ void setup_testMap(void)
   20  |   55 |   60 |   85 |   70
   10  |   40 |   55 |   65 |   70
       ----------------------------
-          10 |   20 |   30 |   40  
+          10 |   20 |   30 |   40
   */
   reset_heap(); // reset table heap
   testMap.initilise(4,4);
@@ -36,7 +36,7 @@ void setup_testMap(void)
 
 void run_tests()
 {
-  UNITY_BEGIN();    // IMPORTANT LINE!
+  UNITY_BEGIN(); // IMPORTANT LINE!
   RUN_TEST(test_table_values);
   RUN_TEST(test_tableLookup_50pct);
   RUN_TEST(test_tableLookup_exact1Axis);

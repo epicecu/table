@@ -5,7 +5,7 @@
 
 #define TABLE_HEAP_DEFAULT_SIZE 2048 // Set a upper heap size limit, if a table can not fit, then return nullptr.
 
-static char _table_heap[TABLE_HEAP_DEFAULT_SIZE];
+static char _table_heap[TABLE_HEAP_DEFAULT_SIZE] = {0};
 static int _heap_pointer = 0;
 /**
  * Allocates memory on the table heap
@@ -29,6 +29,7 @@ static void reset_heap()
 #define TABLE_SHIFT_FACTOR  8
 #define TABLE_SHIFT_POWER   (1UL<<TABLE_SHIFT_FACTOR)
 
+
 /**
  * 3D Tables have an origin (0,0) in the top left hand corner. Vertical axis is expressed first.
  * Eg: 2x2 table
@@ -43,29 +44,22 @@ static void reset_heap()
  *   (1,0) = 1
  *
  */
-template<typename T>
+template<typename T, unsigned int xSize, unsigned int ySize = 1>
 class Table {
 public:
     // 3d table
-    void initilise(char x, char y)
+    void initilise()
     {
-        this->values = (T**)heap_alloc(x * sizeof(T*));
-        for (char i = 0; i < y; i++) { this->values[i] = (T*)heap_alloc(y * sizeof(T)); }
-        this->axisX = (int*)heap_alloc(x * sizeof(int));
-        this->axisY = (int*)heap_alloc(y * sizeof(int));
-        this->xSize = x;
-        this->ySize = y;
+        this->values = (T**)heap_alloc(xSize * sizeof(T*));
+        for (char i = 0; i < ySize; i++) { this->values[i] = (T*)heap_alloc(ySize * sizeof(T)); }
+        this->axisX = (int*)heap_alloc(xSize * sizeof(int));
+        this->axisY = (int*)heap_alloc(ySize * sizeof(int));
         this->lastXInput = 1; // some what hacky...
         this->lastYInput = 1;
         this->cacheIsValid = false; //Invalid the tables cache to ensure a lookup of new values
     }
-    // 2d table
-    void initilise(char x)
-    {
-        initilise(x, 1);
-    }
     // 3d table
-    T getValue(int X_in, int Y_in)
+    T getValue(const int X_in, const int Y_in)
     {
         int X = X_in;
         int Y = Y_in;
@@ -75,7 +69,7 @@ public:
         //Note: For the X axis specifically, rather than looping from tableAxisX[0] up to tableAxisX[max], we start at tableAxisX[Max] and go down.
         //      This is because the important tables (fuel and injection) will have the highest RPM at the top of the X axis, so starting there will mean the best case occurs when the RPM is highest (And hence the CPU is needed most)
         int xMinValue = this->axisX[0];
-        int xMaxValue = this->axisX[this->xSize - 1];
+        int xMaxValue = this->axisX[xSize - 1];
         char xMin = 0;
         char xMax = 0;
 
@@ -100,7 +94,7 @@ public:
             xMin = this->lastXMin;
         }
         //2nd check is whether we're in the next RPM bin (To the right)
-        else if (((this->lastXMax + 1) < this->xSize) && (X <= this->axisX[this->lastXMax + 1]) && (X > this->axisX[this->lastXMin + 1])) //First make sure we're not already at the last X bin
+        else if (((this->lastXMax + 1) < xSize) && (X <= this->axisX[this->lastXMax + 1]) && (X > this->axisX[this->lastXMin + 1])) //First make sure we're not already at the last X bin
         {
             xMax = this->lastXMax + 1;
             this->lastXMax = xMax;
@@ -122,7 +116,7 @@ public:
         else
             //If it's not caught by one of the above scenarios, give up and just run the loop
         {
-            for (int x = this->xSize - 1; x >= 0; x--)
+            for (int x = xSize - 1; x >= 0; x--)
             {
                 //Checks the case where the X value is exactly what was requested
                 if ((X == this->axisX[x]) || (x == 0))
@@ -151,7 +145,7 @@ public:
 
         //Loop through the Y axis bins for the min/max pair
         int yMaxValue = this->axisY[0];
-        int yMinValue = this->axisY[this->ySize - 1];
+        int yMinValue = this->axisY[ySize - 1];
         char yMin = 0;
         char yMax = 0;
 
@@ -178,7 +172,7 @@ public:
             yMinValue = this->axisY[this->lastYMin];
         }
         //3rd check is to look at the previous bin (Next one down)
-        else if (((this->lastYMax + 1) < this->ySize) && (Y <= this->axisY[this->lastYMin + 1]) && (Y > this->axisY[this->lastYMax + 1])) //First make sure we're not already at the bottom Y bin
+        else if (((this->lastYMax + 1) < ySize) && (Y <= this->axisY[this->lastYMin + 1]) && (Y > this->axisY[this->lastYMax + 1])) //First make sure we're not already at the bottom Y bin
         {
             yMax = this->lastYMax + 1;
             this->lastYMax = yMax;
@@ -191,7 +185,7 @@ public:
             //If it's not caught by one of the above scenarios, give up and just run the loop
         {
 
-            for (int y = this->ySize - 1; y >= 0; y--)
+            for (int y = ySize - 1; y >= 0; y--)
             {
                 //Checks the case where the Y value is exactly what was requested
                 if ((Y == this->axisY[y]) || (y == 0))
@@ -283,10 +277,8 @@ public:
     T getValue(int X_in){
         return getValue(X_in, 1);
     }
-
-    // table size
-    char xSize;
-    char ySize;
+    // data; x axis + y axis + values = total table size
+    char data[xSize*sizeof(int) + ySize*sizeof(int) + xSize*ySize*sizeof(T)] = {0};
     // table values
     T** values;
     int* axisX;
@@ -298,6 +290,8 @@ public:
     int lastXInput, lastYInput;
     T lastOutput;
     bool cacheIsValid; ///< This tracks whether the tables cache should be used. Ordinarily this is true, but is set to false whenever TunerStudio sends a new value for the table
+
+    char* tableHeap = _table_heap;
 };
 
 #endif // TABLE_H
