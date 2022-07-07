@@ -1,36 +1,32 @@
 #include "tests_tables.h"
-#include <unity.h>
-#include "Table.h"
-#include <cstdio>
 
-Table<uint8_t> testMap;
+#include "Table.h"
+
+Table<uint8_t, xSize, ySize> testMap;
 
 void setup_testMap(void)
 {
   //Setup the 3d table with some sane values for testing
   //Table is setup per the below
   /*
-  40  |   70 |   70 |   90 |   100
-  30  |   65 |   85 |   85 |   90
-  20  |   55 |   60 |   85 |   70
-  10  |   40 |   55 |   65 |   70
+  40  |   20 |   25 |   60 |   65
+  30  |   15 |   30 |   55 |   70
+  20  |   10 |   35 |   50 |   75
+  10  |    5 |   40 |   45 |   80
       ----------------------------
           10 |   20 |   30 |   40
   */
-  reset_heap(); // reset table heap
-  testMap.initilise(4,4);
-  TEST_ASSERT_EQUAL(testMap.xSize, 4);
-  TEST_ASSERT_EQUAL(testMap.ySize, 4);
+  testMap.initilise();
   
-  int tempXAxis[4] = {10, 20, 30, 40};
-  for (char x = 0; x< testMap.xSize; x++) { testMap.axisX[x] = tempXAxis[x]; }
-  int tempYAxis[4] = {10, 20, 30, 40};
-  for (char y = 0; y< testMap.ySize; y++) { testMap.axisY[y] = tempYAxis[y]; }
+  constexpr int tempXAxis[xSize] = {10, 20, 30, 40};
+  for (char x = 0; x< xSize; x++) { testMap.axisX[x] = tempXAxis[x]; }
+  constexpr int tempYAxis[ySize] = {10, 20, 30, 40};
+  for (char y = 0; y< ySize; y++) { testMap.axisY[y] = tempYAxis[y]; }
 
-  for (char x = 0; x< testMap.xSize; x++) { testMap.values[0][x] = tempRow1[x]; }
-  for (char x = 0; x< testMap.xSize; x++) { testMap.values[1][x] = tempRow2[x]; }
-  for (char x = 0; x< testMap.xSize; x++) { testMap.values[2][x] = tempRow3[x]; }
-  for (char x = 0; x< testMap.xSize; x++) { testMap.values[3][x] = tempRow4[x]; }
+  for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 0, tempRow1[x]); }
+  for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 1, tempRow2[x]); }
+  for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 2, tempRow3[x]); }
+  for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 3, tempRow4[x]); }
   
 }
 
@@ -45,7 +41,6 @@ void run_tests()
   RUN_TEST(test_tableLookup_overMaxY);
   RUN_TEST(test_tableLookup_underMinX);
   RUN_TEST(test_tableLookup_underMinY);
-//  RUN_TEST(test_all_incrementing);
   UNITY_END(); // stop unit testing
   
 }
@@ -54,9 +49,10 @@ void test_table_values(void)
 {
   setup_testMap();
 
-  TEST_ASSERT_EQUAL(testMap.values[0][0], 40);
-  TEST_ASSERT_EQUAL(testMap.values[2][2], 85);
-  TEST_ASSERT_EQUAL(testMap.values[3][3], 100);
+  TEST_ASSERT_EQUAL(testMap.getValueByIndex(0,0), 5);
+  TEST_ASSERT_EQUAL(testMap.getValueByIndex(1,1), 35);
+  TEST_ASSERT_EQUAL(testMap.getValueByIndex(2,2), 55);
+  TEST_ASSERT_EQUAL(testMap.getValueByIndex(3,3), 65);
 }
 
 void test_tableLookup_50pct(void)
@@ -64,11 +60,11 @@ void test_tableLookup_50pct(void)
   //Tests a lookup that is exactly 50% of the way between cells on both the X and Y axis
   setup_testMap();
 
-  int x_axis = 15;
-  int y_axis = 15;
+  constexpr int x_axis = 15;
+  constexpr int y_axis = 15;
 
-  uint8_t value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
-  TEST_ASSERT_EQUAL(value, 52);
+  double value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
+  TEST_ASSERT_EQUAL(value, 22.5);
 }
 
 void test_tableLookup_exact1Axis(void)
@@ -76,22 +72,23 @@ void test_tableLookup_exact1Axis(void)
   //Tests a lookup that exactly matches on the X axis and 50% of the way between cells on the Y axis
   setup_testMap();
 
-  int x_axis = 20;
-  int y_axis = 20;
+  constexpr int x_axis = 10;
+  constexpr int y_axis = 15;
 
-  uint8_t value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
-  TEST_ASSERT_EQUAL(value, 52);
+  double value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
+  TEST_ASSERT_EQUAL(value, 7.5);
 }
 
 void test_tableLookup_exact2Axis(void)
 {
+  //Tests a lookup that exactly matches on the Y axis and 50% of the way between cells on the X axis
   setup_testMap();
 
-  int x_axis = 2500;
-  int y_axis = 70;
+  constexpr int x_axis = 35;
+  constexpr int y_axis = 30;
 
-  uint8_t value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
-  TEST_ASSERT_EQUAL(value, 86);
+  double value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
+  TEST_ASSERT_EQUAL(value, 62.5);
 }
 
 void test_tableLookup_overMaxX(void)
@@ -99,11 +96,11 @@ void test_tableLookup_overMaxX(void)
   //Tests a lookup where the x_axis exceeds the highest value in the table. The Y value is a 50% match
   setup_testMap();
 
-  int x_axis = 10000;
-  int y_axis = 73;
+  constexpr int x_axis = 10000;
+  constexpr int y_axis = 35;
 
-  uint8_t value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
-  TEST_ASSERT_EQUAL(value, 86);
+  double value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
+  TEST_ASSERT_EQUAL(value, -1);
 }
 
 void test_tableLookup_overMaxY(void)
@@ -111,11 +108,11 @@ void test_tableLookup_overMaxY(void)
   //Tests a lookup where the load value exceeds the highest value in the table. The X value is a 50% match
   setup_testMap();
 
-  int x_axis = 600;
-  int y_axis = 110;
+  constexpr int x_axis = 25;
+  constexpr int y_axis = 100;
 
-  uint8_t value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
-  TEST_ASSERT_EQUAL(value, 110);
+  double value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
+  TEST_ASSERT_EQUAL(value, -1);
 }
 
 void test_tableLookup_underMinX(void)
@@ -123,11 +120,11 @@ void test_tableLookup_underMinX(void)
   //Tests a lookup where the x_axis value is below the lowest value in the table. The Y value is a 50% match
   setup_testMap();
 
-  int x_axis = 300;
-  int y_axis = 38;
+  constexpr int x_axis = -10;
+  constexpr int y_axis = 35;
 
-  uint8_t value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
-  TEST_ASSERT_EQUAL(value, 37);
+  double value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
+  TEST_ASSERT_EQUAL(value, -1);
 }
 
 void test_tableLookup_underMinY(void)
@@ -135,33 +132,13 @@ void test_tableLookup_underMinY(void)
   //Tests a lookup where the load value is below the lowest value in the table. The X value is a 50% match
   setup_testMap();
 
-  int x_axis = 600;
-  int y_axis = 8;
+  constexpr int x_axis = 25;
+  constexpr int y_axis = -10;
 
-  uint8_t value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
-  TEST_ASSERT_EQUAL(value, 34);
+  double value = testMap.getValue(x_axis, y_axis); //Perform lookup into fuel map for x_axis vs MAP value
+  TEST_ASSERT_EQUAL(value, -1);
 }
 
-void test_all_incrementing(void)
-{
-  //Test the when going up both the load and x_axis axis that the returned value is always equal or higher to the previous one
-  //Tests all combinations of load/x_axis from between 0-200 load and 0-9000 x_axis
-  //WARNING: This can take a LONG time to run. It is disabled by default for this reason
-  setup_testMap();
-
-  uint8_t tempVE = 0;
-  
-  for(uint8_t x_axis = 0; x_axis<8000; x_axis+=100)
-  {
-    tempVE = 0;
-    for(uint8_t load = 0; load<120; load++)
-    {
-      uint8_t value = testMap.getValue(x_axis, load);
-      TEST_ASSERT_GREATER_OR_EQUAL(tempVE, value);
-      tempVE = value;
-    }
-  }
-}
 
 int main(int argc, char **argv) {
   run_tests();

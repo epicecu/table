@@ -1,3 +1,6 @@
+#include <unity.h>
+#include <cstdio>
+
 void run_tests();
 void setup_testMap(void);
 void test_table_values(void);
@@ -10,8 +13,10 @@ void test_tableLookup_underMinX(void);
 void test_tableLookup_underMinY(void);
 void test_all_incrementing(void);
 
-//Go through the 8 rows and add the column values
-const char tempRow4[4] = {70, 70, 90, 100};
-const char tempRow3[4] = {65, 85, 85, 90};
-const char tempRow2[4] = {55, 60, 85, 70};
-const char tempRow1[4] = {40, 55, 65, 70};
+constexpr unsigned int xSize = 4;
+constexpr unsigned int ySize = 4;
+
+constexpr uint8_t tempRow4[ySize] = {20, 25, 60, 65};
+constexpr uint8_t tempRow3[ySize] = {15, 30, 55, 70};
+constexpr uint8_t tempRow2[ySize] = {10, 35, 50, 75};
+constexpr uint8_t tempRow1[ySize] = {5, 40, 45, 80};
