@@ -1,4 +1,4 @@
-#include "Table.h"
+#include "../Table.h"
 
 /**
  * Cpp example of Table.h
@@ -23,7 +23,6 @@ int main(int argc, char **argv) {
     Table<std::uint32_t, xSize, ySize> map;
 
     std::cout << "Table library" << std::endl;
-    map.resetData(); // reset table heap
     std::cout << "DataSize: " << std::to_string(map.getDataSize()) << std::endl;
     map.initilise();
 

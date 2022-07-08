@@ -13,13 +13,17 @@ public:
     // 3d table
     void initilise()
     {
-        this->dataPointer = 0;
+        resetData();
         this->values = (T*)allocData(xSize * ySize * sizeof(T));
         this->axisX = (int*)allocData(xSize * sizeof(int));
         this->axisY = (int*)allocData(ySize * sizeof(int));
         this->cacheIsValid = false;
+        if(ySize == 1) this->axisY[0] = 1;
     }
-    // 3d table
+    
+    /**
+     * Get table value by x,y axis value/s
+     */
     double getValue(const int X_in, const int Y_in)
     {
         double tableResult = -1;
@@ -75,6 +79,9 @@ public:
                         xMinIdx = i;
                         xMaxIdx = i+1;
                     }
+                }else if(X_in == axisX[i] && xSize == 1){
+                    xMinIdx = i;
+                    xMaxIdx = i;
                 }
                 xMin = axisX[xMinIdx];
                 xMax = axisX[xMaxIdx];
@@ -90,7 +97,7 @@ public:
                         }
                     }
                 }
-                else if(Y_in == axisY[i]){
+                else if(Y_in == axisY[i] && ySize > 1){
                     if(i == yMax-1){
                         yMinIdx = i-1;
                         yMaxIdx = i;
@@ -98,6 +105,9 @@ public:
                         yMinIdx = i;
                         yMaxIdx = i+1;
                     }
+                }else if(Y_in == axisY[i] && ySize == 1){
+                    yMinIdx = i;
+                    yMaxIdx = i;
                 }
                 yMin = axisY[yMinIdx];
                 yMax = axisY[yMaxIdx];
@@ -107,7 +117,16 @@ public:
             double Q21 = getValueByIndex(xMaxIdx, yMinIdx);
             double Q22 = getValueByIndex(xMaxIdx, yMaxIdx);
 
-            tableResult = biLinearInterpolation(Q11, Q12, Q21, Q22, xMin, xMax, yMin, yMax, X_in, Y_in);
+            if(Q11 == Q12 && Q21 == Q22){
+                // 2d interpolation in a (x, 1) sized table
+                tableResult = linearInterpolation(Q11, Q21, xMin, xMax, X_in);
+            }else if(Q11 == Q21 && Q12 == Q22){
+                // 2d interpolation in a (1, y) sized table
+                tableResult = linearInterpolation(Q11, Q12, yMin, yMax, Y_in);
+            }else{
+                // 3d interpolation
+                tableResult = biLinearInterpolation(Q11, Q12, Q21, Q22, xMin, xMax, yMin, yMax, X_in, Y_in);
+            }
 
         }
 
@@ -120,17 +139,114 @@ public:
         return tableResult;
     }
 
-    /** Bi-Linear Interpolation Alg
-    * 
-    *   |
-    * y2|-Q12----R2----Q22
-    *   |  !     !      !
-    *  y|--------P--------
-    *   |  !     !      !
-    * y1|-Q11----R1----Q21
-    *   |__!_____!______!_
-    *      x1     x    x2
-    */
+    double getValue(const int X_in){
+        return getValue(X_in, 1);
+    }
+
+    /**
+     * Set table values by x,y axis value/s
+     */ 
+    bool setValue(const int X_in, const int Y_in, const T value)
+    {
+        int x = -1;
+        int y = -1;
+        for (unsigned int i = 0; i < xSize; i++){
+            if(X_in == axisX[i]) x = i;
+        }
+        for (unsigned int i = 0; i < ySize; i++){
+            if(Y_in == axisY[i]) y = i;
+        }
+        // Direct cell found, return the direct value
+        if (x >= 0 && y >= 0){
+            setValueByIndex(x, y, value);
+            return true;
+        }
+        return false;
+    }
+
+    bool setValue(const int X_in, const T value){
+        int x = -1;
+        for (unsigned int i = 0; i < xSize; i++){
+            if(X_in == axisX[i]) x = i;
+        }
+        // Direct cell found, return the direct value
+        if (x >= 0){
+            setValueByIndex(x, value);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Set Value 
+     */
+    void setValueByIndex(const int x, const int y, const T value){
+        if(x < xSize && y < ySize){
+            values[x * ySize + y] = value;
+        }
+    }
+
+    void setValueByIndex(const int x, const T value){
+        setValueByIndex(x, 0, value);
+    }
+
+    /**
+     *  Get Value
+     */
+    T getValueByIndex(const int x, const int y){
+        return values[x * ySize + y];
+    }
+
+    T getValueByIndex(const int x){
+        return getValueByIndex(x, 0);
+    }
+
+    /**
+     * Data - Public
+     */
+    static constexpr int getDataSize(){
+        // Values, xAxis, yAxis
+        return xSize*ySize*sizeof(T) + xSize*sizeof(int) + ySize*sizeof(int) + 1;
+    }
+    char data[getDataSize()] = {0};
+    void resetData(){
+        for(unsigned int i = 0; i < getDataSize(); i++) data[i] = 0x00;
+        dataPointer = 0;
+    }
+
+    /**
+     * Other
+     */
+    void invalidateCache(){
+        cacheIsValid = false;
+    }
+    
+private:
+    /**
+     * Data - Private
+     */
+    unsigned int dataPointer = 0;
+    constexpr void* allocData(unsigned int size){
+        char* ptr = nullptr;
+        if(size < getDataSize()-dataPointer){
+            ptr = &data[dataPointer];
+        }
+        dataPointer+=size;
+        return ptr;
+    }
+
+        /** 
+     * Bi-Linear Interpolation Alg
+     * 
+     *   |
+     * y2|-Q12----R2----Q22
+     *   |  !     !      !
+     *  y|--------P--------
+     *   |  !     !      !
+     * y1|-Q11----R1----Q21
+     *   |__!_____!______!_
+     *      x1    x     x2
+     */
     static double biLinearInterpolation(const double q11, const double q12, const double q21, const double q22, const int x1, const int x2, const int y1, const int y2, const int x, const int y) 
     {
         int x2x1 = x2 - x1;
@@ -147,61 +263,14 @@ public:
         );
     }
 
-    // 2d table
-    double getValue(const int X_in){
-        return getValue(X_in, 1);
-    }
-
-    void setValue(const int X_in, const int Y_in, const T value)
+    /** 
+     * y1|-Q11----R1----Q21
+     *   |__!_____!______!_
+     *      x1    x     x2
+     */
+    static double linearInterpolation(const double q11, const double q21, const int x1,  const int x2, const int x)
     {
-        int x = -1;
-        int y = -1;
-        for (unsigned int i = 0; i < xSize; i++){
-            if(X_in == axisX[i]) x = i;
-        }
-        for (unsigned int i = 0; i < ySize; i++){
-            if(Y_in == axisY[i]) y = i;
-        }
-        // Direct cell found, return the direct value
-        if (x >= 0 && y >= 0){
-            setValueByIndex(x, y, value);
-        }
-    }
-
-    // Set value at x & y cell
-    void setValueByIndex(const int x, const int y, const T value){
-        if(x < xSize && y < ySize){
-            values[x * ySize + y] = value;
-        }
-    }
-
-    T getValueByIndex(const int x, const int y){
-        return values[x * ySize + y];
-    }
-
-    static constexpr int getDataSize(){
-        // Values, xAxis, yAxis
-        return xSize*ySize*sizeof(T) + xSize*sizeof(int) + ySize*sizeof(int) + 1;
-    }
-    char data[getDataSize()] = {0};
-    void resetData(){
-        for(unsigned int i = 0; i < getDataSize(); i++) data[i] = 0x00;
-        dataPointer = 0;
-    }
-
-    void invalidateCache(){
-        cacheIsValid = false;
-    }
-    
-private:
-    unsigned int dataPointer = 0;
-    constexpr void* allocData(unsigned int size){
-        char* ptr = nullptr;
-        if(size < getDataSize()-dataPointer){
-            ptr = &data[dataPointer];
-        }
-        dataPointer+=size;
-        return ptr;
+        return q11 + ((q21-q11)/(x2-x1)) * (x-x1);
     }
 
 public:
