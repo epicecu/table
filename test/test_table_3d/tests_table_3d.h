@@ -14,6 +14,7 @@ void test_tableLookup_underMinY(void);
 void test_all_incrementing(void);
 void test_setValue(void);
 void test_setValueNonDirect(void);
+void test_copyData(void);
 
 constexpr unsigned int xSize = 4;
 constexpr unsigned int ySize = 4;

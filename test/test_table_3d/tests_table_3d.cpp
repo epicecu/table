@@ -2,6 +2,8 @@
 
 #include "Table.h"
 
+#include <string.h>
+
 Table<uint8_t, xSize, ySize> testMap;
 Table<uint8_t, xSize/2, ySize/2> secondMap;
 
@@ -44,6 +46,7 @@ void run_tests()
   RUN_TEST(test_tableLookup_underMinY);
   RUN_TEST(test_setValue);
   RUN_TEST(test_setValueNonDirect);
+  RUN_TEST(test_copyData);
   UNITY_END(); // stop unit testing
   
 }
@@ -174,6 +177,40 @@ void test_setValueNonDirect()
   TEST_ASSERT_NOT_EQUAL(57, value);
 }
 
+void test_copyData()
+{
+  setup_testMap();
+
+  // Set value by direct axis values
+  constexpr int x_axis = 20;
+  constexpr int y_axis = 20;
+
+  bool result = testMap.setValue(x_axis, y_axis, 57);
+
+  // copy data
+  char copyData[testMap.getDataSize()] = {0};
+  memcpy(&copyData, &testMap.data, testMap.getDataSize());
+  
+  // change value 
+  result = testMap.setValue(x_axis, y_axis, 32);
+  TEST_ASSERT_TRUE(result);
+  double value = testMap.getValue(x_axis, y_axis);
+  TEST_ASSERT_EQUAL(32, value);
+
+  // copy data back...
+  memcpy(&testMap.data, &copyData, testMap.getDataSize());
+  // Clear cache
+  testMap.invalidateCache();
+
+  // the value should be the original value from the first setValue call
+  value = testMap.getValue(x_axis, y_axis);
+  TEST_ASSERT_EQUAL(57, value);
+
+}
+
+void setUp (void) {}
+
+void tearDown (void) {}
 
 int main(int argc, char **argv) {
   run_tests();

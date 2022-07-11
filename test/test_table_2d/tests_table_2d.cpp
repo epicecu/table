@@ -92,6 +92,9 @@ void test_tableLookup_underMinX(void)
   TEST_ASSERT_EQUAL(-1, value);
 }
 
+void setUp (void) {}
+
+void tearDown (void) {}
 
 int main(int argc, char **argv) {
   run_tests();
