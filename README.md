@@ -10,7 +10,17 @@
 
 ## Information
 
-todo...
+The library uses modern cpp templating features to allocate the correct data size during compilation. The X and Y axis data is stored as integers and the table data is stored using the templated data type.
+
+Note: Store the axis data in a linear fashion from smallest to largest starting from the origin position. This is to ensure that interpolation can be processed between axis data points.
+
+```
+
+Table<data type, xSzie, ySize> 3dTable;
+
+Table<data type, xSzie> 2dTable;
+
+```
 
 ## Exmaple
 
