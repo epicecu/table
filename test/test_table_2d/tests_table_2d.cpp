@@ -4,7 +4,7 @@
 
 Table<uint8_t, xSize> testMap;
 
-void setup_testMap(void)
+void setup_testMap(bool validate)
 {
   //Setup the 3d table with some sane values for testing
   //Table is setup per the below
@@ -22,7 +22,10 @@ void setup_testMap(void)
   // Cells
   for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 0, tempRow1[x]); }
 
-  
+  if(validate){
+    // validate table
+    testMap.validate();
+  }
 }
 
 void run_tests()

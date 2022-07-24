@@ -2,7 +2,7 @@
 #include <cstdio>
 
 void run_tests();
-void setup_testMap(void);
+void setup_testMap(bool validate = true);
 void test_table_values(void);
 void test_tableLookup_50pct(void);
 void test_tableLookup_exact1Axis(void);
@@ -15,6 +15,7 @@ void test_all_incrementing(void);
 void test_setValue(void);
 void test_setValueNonDirect(void);
 void test_copyData(void);
+void test_invalidAxis(void);
 
 constexpr unsigned int xSize = 4;
 constexpr unsigned int ySize = 4;

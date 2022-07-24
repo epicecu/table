@@ -7,7 +7,7 @@
 Table<uint8_t, xSize, ySize> testMap;
 Table<uint8_t, xSize/2, ySize/2> secondMap;
 
-void setup_testMap(void)
+void setup_testMap(bool validate)
 {
   //Setup the 3d table with some sane values for testing
   //Table is setup per the below
@@ -31,6 +31,10 @@ void setup_testMap(void)
   for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 2, tempRow3[x]); }
   for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 3, tempRow4[x]); }
   
+  if(validate){
+    // validate table
+    testMap.validate();
+  }
 }
 
 void run_tests()
@@ -47,6 +51,7 @@ void run_tests()
   RUN_TEST(test_setValue);
   RUN_TEST(test_setValueNonDirect);
   RUN_TEST(test_copyData);
+  RUN_TEST(test_invalidAxis);
   UNITY_END(); // stop unit testing
   
 }
@@ -205,7 +210,15 @@ void test_copyData()
   // the value should be the original value from the first setValue call
   value = testMap.getValue(x_axis, y_axis);
   TEST_ASSERT_EQUAL(57, value);
+}
 
+void test_invalidAxis()
+{
+  setup_testMap(false);
+  testMap.axisX[1] = 5; // replace 10 with 5
+  
+  bool result = testMap.validate();
+  TEST_ASSERT_FALSE(result);
 }
 
 void setUp (void) {}
