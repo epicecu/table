@@ -2,7 +2,7 @@
 #include <cstdio>
 
 void run_tests();
-void setup_testMap(void);
+void setup_testMap(bool validate = true);
 void test_table_values(void);
 void test_tableLookup_50pct(void);
 void test_tableLookup_exactAxis(void);
