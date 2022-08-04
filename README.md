@@ -2,7 +2,7 @@
 
 <img src="support/epicecu-tables-logo.png" alt="EpicECU Tables" width="400" />
 
-##### An open source Table library supporting 2d and 3d modes. This is useful for lookups e.g. fuel, timing maps.
+##### An open source Table library supporting 2 and 3 dementional configurations. Useful for performing table lookups e.g. fuel, timing maps.
 
 </div>
 
@@ -10,9 +10,9 @@
 
 ## Information
 
-The library uses modern cpp templating features to allocate the correct data size during compilation. The X and Y axis data is stored as integers and the table data is stored using the templated data type.
+The library uses modern cpp templating to allocate the correct data size during compilation. The X and Y axis data is stored as integers and the table data is stored using the templated data type.
 
-Note: Store the axis data in a linear fashion from smallest to largest starting from the origin position. This is to ensure that interpolation can be processed between axis data points.
+Note: Store the axis data in a linear fashion from smallest to largest starting from the origin position. This is to ensure that interpolation can be performed between axis data points.
 
 ```
 
