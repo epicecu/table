@@ -28,6 +28,11 @@ public:
     {
         double tableResult = -1;
 
+        // Check if the table has been validated
+        if(!valid){
+            return tableResult;
+        }
+
         // Check if requesting over bounds
         if(X_in > axisX[xSize-1] || Y_in > axisY[ySize-1] || X_in < axisX[0] || Y_in < axisY[0]){
            return tableResult; 
@@ -148,33 +153,41 @@ public:
      */ 
     bool setValue(const int X_in, const int Y_in, const T value)
     {
-        int x = -1;
-        int y = -1;
-        for (unsigned int i = 0; i < xSize; i++){
-            if(X_in == axisX[i]) x = i;
+        bool result = false;
+        // check if table is valid
+        if(valid){
+            int x = -1;
+            int y = -1;
+            for (unsigned int i = 0; i < xSize; i++){
+                if(X_in == axisX[i]) x = i;
+            }
+            for (unsigned int i = 0; i < ySize; i++){
+                if(Y_in == axisY[i]) y = i;
+            }
+            // Direct cell found, return the direct value
+            if (x >= 0 && y >= 0){
+                setValueByIndex(x, y, value);
+                result = true;
+            }
         }
-        for (unsigned int i = 0; i < ySize; i++){
-            if(Y_in == axisY[i]) y = i;
-        }
-        // Direct cell found, return the direct value
-        if (x >= 0 && y >= 0){
-            setValueByIndex(x, y, value);
-            return true;
-        }
-        return false;
+        return result;
     }
 
     bool setValue(const int X_in, const T value){
-        int x = -1;
-        for (unsigned int i = 0; i < xSize; i++){
-            if(X_in == axisX[i]) x = i;
+        bool result = false;
+        // check if table is valid
+        if(valid){
+            int x = -1;
+            for (unsigned int i = 0; i < xSize; i++){
+                if(X_in == axisX[i]) x = i;
+            }
+            // Direct cell found, return the direct value
+            if (x >= 0){
+                setValueByIndex(x, value);
+                result = true;
+            }
         }
-        // Direct cell found, return the direct value
-        if (x >= 0){
-            setValueByIndex(x, value);
-            return true;
-        }
-        return false;
+        return result;
     }
 
     /**
@@ -190,15 +203,63 @@ public:
         setValueByIndex(x, 0, value);
     }
 
-    /**
-     *  Get Value
-     */
+    /// Get Value
+    /// @brief Gets the table value by column & row indexes
+    /// @param x column index
+    /// @param y row index
+    /// @return Table value in cell x, y
     T getValueByIndex(const int x, const int y){
         return values[x * ySize + y];
     }
 
+    /// Get Value
+    /// @brief Gets the table value by column & row indexes
+    /// @param x column index
+    /// @return Table value in cell x
     T getValueByIndex(const int x){
         return getValueByIndex(x, 0);
+    }
+
+    /// Validate Table
+    /// @brief Validates the table axis values increase linearly
+    /// @return True if the table axis values are valid
+    bool validate(){
+        bool valid = true;
+        int lastValue = 0;
+        bool first = true;
+        // Check x axis
+        for (unsigned int i = 0; i < xSize; i++){
+            if(first){
+                lastValue = axisX[i];
+                first = false;
+            }else{
+                // the forward value is smaller then the previous
+                if(axisX[i] < lastValue){
+                    valid = false;
+                }else{
+                    lastValue = axisX[i];
+                }
+            }
+        }
+        // check y axis
+        lastValue = 0;
+        first = true;
+        for (unsigned int i = 0; i < ySize; i++){
+            if(first){
+                lastValue = axisY[i];
+            }else{
+                // the forward value is smaller then the previous
+                if(axisY[i] < lastValue){
+                    valid = false;
+                }else{
+                    lastValue = axisY[i];
+                }
+            }
+        }
+        // remember result
+        this->valid = valid;
+        // finally
+        return valid;
     }
 
     /**
@@ -280,6 +341,7 @@ public:
     int* axisY;
 
 private:
+    bool valid = false;
     // caching
     int lastX_in;
     int lastY_in;
