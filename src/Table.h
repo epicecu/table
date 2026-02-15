@@ -1,17 +1,23 @@
-#ifndef TABLE_H
-#define TABLE_H
+#ifndef EPICECU_TABLE_H
+#define EPICECU_TABLE_H
 
 /**
- * Table implementation with bilinear interpolation support between points.
+ * Table.
+ * 
+ * A Table implementation with bilinear interpolation support between points.
+ * 
  * Author: David Cedar
  * Email: david@epicecu.com
  * URL: https://github.com/epicecu/table
+ * 
+ * Copyright © 2022 David Cedar. All rights reserved.
+ * Licensed under the LGPL License (see LICENSE file)
  */
 template<typename T, unsigned int xSize, unsigned int ySize = 1>
 class Table {
 public:
     // 3d table
-    void initilise()
+    void initialise()
     {
         resetData();
         this->values = (T*)allocData(xSize * ySize * sizeof(T));
@@ -287,4 +293,4 @@ private:
     bool cacheIsValid;
 };
 
-#endif // TABLE_H
+#endif // EPICECU_TABLE_H

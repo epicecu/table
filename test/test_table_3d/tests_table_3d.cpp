@@ -19,7 +19,7 @@ void setup_testMap(void)
       ----------------------------
           10 |   20 |   30 |   40
   */
-  testMap.initilise();
+  testMap.initialise();
   
   constexpr int tempXAxis[xSize] = {10, 20, 30, 40};
   for (char x = 0; x< xSize; x++) { testMap.axisX[x] = tempXAxis[x]; }

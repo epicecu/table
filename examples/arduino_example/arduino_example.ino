@@ -20,10 +20,10 @@ int incomingByte;
 bool waitingByte=false;
 
 void setup() {
-    // initialize serial communication at 9600 bits per second:
+    // Initialise serial communication at 9600 bits per second:
     Serial.begin(9600);
-    // Initilise the table object  
-    table.initilise();
+    // Initialise the table object  
+    table.initialise();
 
     constexpr int tempRow5[5] = {10, 60, 110, 160, 210};
     constexpr int tempRow4[5] = {20, 70, 120, 170, 220};
@@ -43,9 +43,6 @@ void setup() {
     for (char x = 0; x< xSize; x++) { table.setValueByIndex(x, 2, tempRow3[x]); }
     for (char x = 0; x< xSize; x++) { table.setValueByIndex(x, 3, tempRow4[x]); }
     for (char x = 0; x< xSize; x++) { table.setValueByIndex(x, 4, tempRow5[x]); }
-
-
-
 }
 
 void loop() {
@@ -71,7 +68,6 @@ void loop() {
             table.getValue(50, 60);
 
         }
-        
     }
 
 }

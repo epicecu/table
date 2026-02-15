@@ -1,4 +1,4 @@
-#include "../Table.h"
+#include <Table.h>
 
 /**
  * Cpp example of Table.h
@@ -6,6 +6,7 @@
  * Used for debugging and testing the library during development.
  */
 
+#include <cstdint>
 #include <iostream>
 
 //Go through the 8 rows and add the column values
@@ -24,7 +25,7 @@ int main(int argc, char **argv) {
 
     std::cout << "Table library" << std::endl;
     std::cout << "DataSize: " << std::to_string(map.getDataSize()) << std::endl;
-    map.initilise();
+    map.initialise();
 
     // Axis data
     int tempXAxis[5] = {0, 50, 60, 75, 100};

@@ -2,7 +2,7 @@
 
 <img src="support/epicecu-tables-logo.png" alt="EpicECU Tables" width="400" />
 
-##### An open source Table library supporting 2 and 3 dementional configurations. Useful for performing table lookups e.g. fuel, timing maps.
+##### An open source Table library supporting 2 and 3 dimensional configurations. Useful for performing table lookups e.g. fuel, timing maps.
 
 </div>
 
@@ -24,7 +24,7 @@ Table<data type, xSzie> 2dTable;
 
 ## Exmaple
 
-See the `/examples` folder for an Ardunio example.
+See the `/examples` folder for Ardunio & CPP  examples.
 
 ## Maintainers
 
@@ -32,4 +32,4 @@ See the `/examples` folder for an Ardunio example.
 
 ## License
 
-GPL V2 © [Programmor](https://github.com/epicecu/table)
+LGPL v3.0 [LICENSE](LICENSE)

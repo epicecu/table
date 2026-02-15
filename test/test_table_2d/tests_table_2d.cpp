@@ -14,7 +14,7 @@ void setup_testMap(void)
       -----------------------------------
            0 |   20 |   40 |   60 |   80
   */
-  testMap.initilise();
+  testMap.initialise();
   
   // Axis
   constexpr int tempXAxis[xSize] = {0, 20, 40, 60, 80};
