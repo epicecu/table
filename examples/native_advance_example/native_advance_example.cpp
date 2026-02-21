@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
     // Axis data
     int tempXAxis[5] = {0, 50, 60, 75, 100};
-    for (char x = 0; x< xSize; x++) { map.axisX[x] = tempXAxis[x]; }
+    for (char x = 0; x< xSize; x++) { map.setXAxisValueByIndex(x, tempXAxis[x]); }
     
     // Table data
     for (char x = 0; x< xSize; x++) { map.setValueByIndex(x, tempRow1[x]); }

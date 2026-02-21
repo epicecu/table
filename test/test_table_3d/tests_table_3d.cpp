@@ -22,9 +22,9 @@ void setup_testMap(void)
   testMap.initialise();
   
   constexpr int tempXAxis[xSize] = {10, 20, 30, 40};
-  for (char x = 0; x< xSize; x++) { testMap.axisX[x] = tempXAxis[x]; }
+  for (char x = 0; x< xSize; x++) { testMap.setXAxisValueByIndex(x, tempXAxis[x]); }
   constexpr int tempYAxis[ySize] = {10, 20, 30, 40};
-  for (char y = 0; y< ySize; y++) { testMap.axisY[y] = tempYAxis[y]; }
+  for (char y = 0; y< ySize; y++) { testMap.setYAxisValueByIndex(y, tempYAxis[y]); }
 
   for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 0, tempRow1[x]); }
   for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 1, tempRow2[x]); }

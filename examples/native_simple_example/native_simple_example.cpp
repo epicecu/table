@@ -30,8 +30,8 @@ int main(int argc, char **argv) {
     // Axis data
     int tempXAxis[5] = {0, 50, 60, 75, 100};
     int tempYAxis[5] = {0, 50, 60, 75, 100};
-    for (char x = 0; x< xSize; x++) { map.axisX[x] = tempXAxis[x]; }
-    for (char y = 0; y< ySize; y++) { map.axisY[y] = tempYAxis[y]; }
+    for (char x = 0; x< xSize; x++) { map.setXAxisValueByIndex(x, tempXAxis[x]); }
+    for (char y = 0; y< ySize; y++) { map.setYAxisValueByIndex(y, tempYAxis[y]); }
     
     // Table data
     for (char x = 0; x< xSize; x++) { map.setValueByIndex(x, 0, tempRow1[x]); }

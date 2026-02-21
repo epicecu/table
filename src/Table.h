@@ -13,25 +13,30 @@
  * Copyright © 2022 David Cedar. All rights reserved.
  * Licensed under the LGPL License (see LICENSE file)
  */
-template<typename T, unsigned int xSize, unsigned int ySize = 1>
+template<typename T, unsigned int xSize, unsigned int ySize = 1, typename XAxisT = int, typename YAxisT = int>
 class Table {
 public:
-    // 3d table
-    void initialise()
-    {
+    /**
+     * Initialises the Table object.
+     */
+    void initialise() {
         resetData();
-        this->values = (T*)allocData(xSize * ySize * sizeof(T));
-        this->axisX = (int*)allocData(xSize * sizeof(int));
-        this->axisY = (int*)allocData(ySize * sizeof(int));
-        this->cacheIsValid = false;
-        if(ySize == 1) this->axisY[0] = 1;
+        values = (T*)allocData(xSize * ySize * sizeof(T));
+        axisX = (XAxisT*)allocData(xSize * sizeof(XAxisT));
+        axisY = (YAxisT*)allocData(ySize * sizeof(YAxisT));
+        cacheIsValid = false;
+        if(ySize == 1) axisY[0] = 1;
+        lastX_in=0;
+        lastY_in=0;
     }
     
     /**
-     * Get table value by x,y axis value/s
+     * Gets the value table value by x,y axis value/s.
+     * @param X_in The x-axis value.
+     * @param Y_in The y-axis value.
+     * @returns The table value. -1 if out of bounds.
      */
-    double getValue(const int X_in, const int Y_in)
-    {
+    double getValue(const XAxisT X_in, const YAxisT Y_in) {
         double tableResult = -1;
 
         // Check if requesting over bounds
@@ -59,13 +64,18 @@ public:
         }
         // Direct cell found, return the value
         if (x >= 0 && y >= 0){
-
             tableResult = getValueByIndex(x, y);
         
         // Interpolation is required
         }else{
-            unsigned int xMinIdx=0, yMinIdx=0, xMaxIdx=0, yMaxIdx=0; 
-            int xMin=0, yMin=0, xMax=0, yMax=0;
+            unsigned int xMinIdx = 0;
+            unsigned int yMinIdx = 0;
+            unsigned int xMaxIdx = 0;
+            unsigned int yMaxIdx = 0;
+            XAxisT xMin = 0; 
+            XAxisT xMax = 0; 
+            YAxisT yMin = 0; 
+            YAxisT yMax = 0;
             // x-axis
             for (unsigned int i = 0; i < xSize; i++){
                 if(X_in > axisX[i]){
@@ -145,15 +155,23 @@ public:
         return tableResult;
     }
 
-    double getValue(const int X_in){
+    /**
+     * Retrieves the value of a specific position.
+     * @param X_in The x-axis value.
+     * @returns The value at the specified position. If the position is outside of the table bounds, returns a default value.
+     */
+    double getValue(const XAxisT X_in) {
         return getValue(X_in, 1);
     }
 
     /**
-     * Set table values by x,y axis value/s
-     */ 
-    bool setValue(const int X_in, const int Y_in, const T value)
-    {
+     * Sets the value of a specific position in the table.
+     * @param X_in The x-axis value.
+     * @param Y_in The y-axis value.
+     * @param value The new value to set at the specified (x,y) position.
+     * @returns True if the value was set successfully, False otherwise. 
+     */
+    bool setValue(const XAxisT X_in, const YAxisT Y_in, const T value) {
         int x = -1;
         int y = -1;
         for (unsigned int i = 0; i < xSize; i++){
@@ -170,7 +188,13 @@ public:
         return false;
     }
 
-    bool setValue(const int X_in, const T value){
+    /**
+     * Sets the value of a specific position in the table using only the x-axis value.
+     * @param X_in The x-axis value.
+     * @param value The new value to set at the specified (x,y) position.
+     * @returns True if the value was set successfully, False otherwise. 
+     */
+    bool setValue(const XAxisT X_in, const T value){
         int x = -1;
         for (unsigned int i = 0; i < xSize; i++){
             if(X_in == axisX[i]) x = i;
@@ -184,54 +208,176 @@ public:
     }
 
     /**
-     * Set Value 
+     * Set Value by X and Y Index.
+     * @param x index of the row in the table.
+     * @param y index of the column in the table.
+     * @param value to set.
+     * @returns True if the value was set successfully, False otherwise.
      */
-    void setValueByIndex(const int x, const int y, const T value){
-        if(x < xSize && y < ySize){
-            values[x * ySize + y] = value;
+    bool setValueByIndex(const unsigned int x, const unsigned int y, const T value){
+        if(x >= xSize || y >= ySize){
+            return false;
         }
-    }
-
-    void setValueByIndex(const int x, const T value){
-        setValueByIndex(x, 0, value);
+        values[x * ySize + y] = value;
+        return true;
     }
 
     /**
-     *  Get Value
+     * Set Value by X Index.
+     * @param x index of the row in the table.
+     * @param value to set.
+     * @returns True if the value was set successfully, False otherwise.
      */
-    T getValueByIndex(const int x, const int y){
+    bool setValueByIndex(const unsigned int x, const T value){
+        return setValueByIndex(x, 0, value);
+    }
+
+    /**
+     * Get Value by X and Y index.
+     * @param x index of the row in the table.
+     * @param y index of the column in the table.
+     * @return value at index (x,y).
+     */
+    T getValueByIndex(const unsigned int x, const unsigned int y){
         return values[x * ySize + y];
     }
 
-    T getValueByIndex(const int x){
+    /**
+     * Get Value by X index.
+     * @param x index of the row in the table.
+     * @return value at index x.
+     */
+    T getValueByIndex(const unsigned int x){
         return getValueByIndex(x, 0);
     }
 
     /**
-     * Data - Public
+     * Set X Axis Value by Index.
+     * @param x index of the row in the table.
+     * @param value to set.
+     * @returns True if the value was set successfully, False otherwise.
+     */
+    bool setXAxisValueByIndex(const unsigned int x, const XAxisT value){
+        if(x >= xSize){
+            return false;
+        }
+        axisX[x] = value;
+        return true;
+    }
+
+    /**
+     * Set Y Axis Value by Index.
+     * @param y index of the column in the table.
+     * @param value to set.
+     * @returns True if the value was set successfully, False otherwise.
+     */
+    bool setYAxisValueByIndex(const unsigned int y, const YAxisT value){
+        if(y >= ySize){
+            return false;
+        }
+        axisY[y] = value;
+        return true;
+    }
+
+    /**
+     * Load table data from a buffer.
+     * @param buffer pointer to the data buffer.
+     * @param size size of the buffer in bytes.
+     * @returns true if data was loaded successfully.
+     */
+    bool loadData(const char* buffer, size_t size) {
+        if (size != getDataSize()) {
+            return false;
+        }
+        
+        // Copy the entire data buffer
+        for (size_t i = 0; i < size; i++) {
+            data[i] = buffer[i];
+        }
+        
+        // Re-initialize pointers
+        dataPointer = 0;
+        values = (T*)allocData(xSize * ySize * sizeof(T));
+        axisX = (XAxisT*)allocData(xSize * sizeof(XAxisT));
+        axisY = (YAxisT*)allocData(ySize * sizeof(YAxisT));
+        
+        // Reset cache
+        cacheIsValid = false;
+        return true;
+    }
+
+    /**
+     * Save table data to a buffer.
+     * @param buffer pointer to the output buffer.
+     * @param size size of the buffer in bytes.
+     * @returns true if data was saved successfully.
+     */
+    bool saveData(char* buffer, size_t size) const {
+        if (size != getDataSize()) {
+            return false;
+        }
+        
+        // Copy the entire data buffer
+        for (size_t i = 0; i < size; i++) {
+            buffer[i] = data[i];
+        }
+        
+        return true;
+    }
+
+    /**
+     * Get Data Size.
+     * @return size of the data in bytes.
      */
     static constexpr int getDataSize(){
         // Values, xAxis, yAxis
-        return xSize*ySize*sizeof(T) + xSize*sizeof(int) + ySize*sizeof(int) + 1;
+        return xSize*ySize*sizeof(T) + xSize*sizeof(XAxisT) + ySize*sizeof(YAxisT) + 1;
     }
+    
+    // The data is stored here.
     char data[getDataSize()] = {0};
+
+    /**
+     * Reset the data to zero.
+     */
     void resetData(){
-        for(unsigned int i = 0; i < getDataSize(); i++) data[i] = 0x00;
+        for(unsigned int i = 0; i < getDataSize(); i++){
+            data[i] = 0x00;  
+        }
         dataPointer = 0;
     }
 
     /**
-     * Other
+     * Invalidate the cache.
+     * This will force a recalculation of the output when it is next requested.
      */
     void invalidateCache(){
         cacheIsValid = false;
     }
+
+protected:
+    // table values.
+    T* values; // x * ySize + y
+    XAxisT* axisX;
+    YAxisT* axisY;
     
 private:
+    // caching.
+    XAxisT lastX_in;
+    YAxisT lastY_in;
+    double lastOutput;
+    bool cacheIsValid;
+
     /**
-     * Data - Private
+     * Data Ptr.
      */
     unsigned int dataPointer = 0;
+
+    /**
+     * Alloca Data.
+     * @param size Size of data to allocate.
+     * @returns Pointer to allocated data or nullptr if allocation failed.
+     */
     constexpr void* allocData(unsigned int size){
         char* ptr = nullptr;
         if(size < getDataSize()-dataPointer){
@@ -241,8 +387,8 @@ private:
         return ptr;
     }
 
-        /** 
-     * Bi-Linear Interpolation Alg
+    /** 
+     * Bi-Linear Interpolation Alg.
      * 
      *   |
      * y2|-Q12----R2----Q22
@@ -270,6 +416,8 @@ private:
     }
 
     /** 
+     * Linear Interpolation Alg.
+     * 
      * y1|-Q11----R1----Q21
      *   |__!_____!______!_
      *      x1    x     x2
@@ -278,19 +426,6 @@ private:
     {
         return q11 + ((q21-q11)/(x2-x1)) * (x-x1);
     }
-
-public:
-    // table values
-    T* values; // x * ySize + y
-    int* axisX;
-    int* axisY;
-
-private:
-    // caching
-    int lastX_in;
-    int lastY_in;
-    double lastOutput;
-    bool cacheIsValid;
 };
 
 #endif // EPICECU_TABLE_H

@@ -18,7 +18,7 @@ void setup_testMap(void)
   
   // Axis
   constexpr int tempXAxis[xSize] = {0, 20, 40, 60, 80};
-  for (char x = 0; x< xSize; x++) { testMap.axisX[x] = tempXAxis[x]; }
+  for (char x = 0; x< xSize; x++) { testMap.setXAxisValueByIndex(x, tempXAxis[x]); }
   // Cells
   for (char x = 0; x< xSize; x++) { testMap.setValueByIndex(x, 0, tempRow1[x]); }
 
