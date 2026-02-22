@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
     std::cout << "Table library" << std::endl;
     map.resetData(); // reset table heap
-    std::cout << "DataSize: " << std::to_string(map.getDataSize()) << std::endl;
+    std::cout << "DataSize: " << std::to_string(map.getSize()) << std::endl;
     map.initialise();
 
     // Axis data

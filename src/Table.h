@@ -21,9 +21,6 @@ public:
      */
     void initialise() {
         resetData();
-        values = (T*)allocData(xSize * ySize * sizeof(T));
-        axisX = (XAxisT*)allocData(xSize * sizeof(XAxisT));
-        axisY = (YAxisT*)allocData(ySize * sizeof(YAxisT));
         cacheIsValid = false;
         if(ySize == 1) axisY[0] = 1;
         lastX_in=0;
@@ -78,9 +75,9 @@ public:
             YAxisT yMax = 0;
             // x-axis
             for (unsigned int i = 0; i < xSize; i++){
-                if(X_in > axisX[i]){
+                if(X_in >= axisX[i]){
                     if(i+1 < xSize){
-                        if(X_in < axisX[i+1]){
+                        if(X_in <= axisX[i+1]){
                             // Found the bounds in x axis
                             xMinIdx = i;
                             xMaxIdx = i+1;
@@ -104,9 +101,9 @@ public:
             }
             // y-axis
             for (unsigned int i = 0; i < ySize; i++){
-                if(Y_in > axisY[i]){
+                if(Y_in >= axisY[i]){
                     if(i+1 < ySize){
-                        if(Y_in < axisY[i+1]){
+                        if(Y_in <= axisY[i+1]){
                             // Found the bounds in x axis
                             yMinIdx = i;
                             yMaxIdx = i+1;
@@ -182,8 +179,7 @@ public:
         }
         // Direct cell found, return the direct value
         if (x >= 0 && y >= 0){
-            setValueByIndex(x, y, value);
-            return true;
+            return setValueByIndex(x, y, value);
         }
         return false;
     }
@@ -201,8 +197,7 @@ public:
         }
         // Direct cell found, return the direct value
         if (x >= 0){
-            setValueByIndex(x, value);
-            return true;
+            return setValueByIndex(x, value);
         }
         return false;
     }
@@ -285,21 +280,25 @@ public:
      * @param size size of the buffer in bytes.
      * @returns true if data was loaded successfully.
      */
-    bool loadData(const char* buffer, size_t size) {
-        if (size != getDataSize()) {
+    bool loadData(const char* buffer, unsigned int size) {
+        if (size != getSize()) {
             return false;
         }
         
-        // Copy the entire data buffer
-        for (size_t i = 0; i < size; i++) {
-            data[i] = buffer[i];
+        // Copy the table values to the  buffer
+        for (unsigned int i = 0; i < xSize*ySize; i++) {
+            values[i] = buffer[i];
         }
-        
-        // Re-initialize pointers
-        dataPointer = 0;
-        values = (T*)allocData(xSize * ySize * sizeof(T));
-        axisX = (XAxisT*)allocData(xSize * sizeof(XAxisT));
-        axisY = (YAxisT*)allocData(ySize * sizeof(YAxisT));
+
+        // Copy the X values to the  buffer
+        for (unsigned int i = 0; i < xSize; i++) {
+            axisX[i] = buffer[i+getDataSize()];
+        }
+
+        // Copy the Y values to the  buffer
+        for (unsigned int i = 0; i < ySize; i++) {
+            axisY[i] = buffer[i+getDataSize()+getXAxisDataSize()];
+        }
         
         // Reset cache
         cacheIsValid = false;
@@ -308,43 +307,43 @@ public:
 
     /**
      * Save table data to a buffer.
-     * @param buffer pointer to the output buffer.
+     * @param buffer pointer to the output buffer. 
+     *               1. Data values
+     *               2. X Axis values
+     *               3. Y Axis values
      * @param size size of the buffer in bytes.
      * @returns true if data was saved successfully.
      */
-    bool saveData(char* buffer, size_t size) const {
-        if (size != getDataSize()) {
+    bool saveData(char* buffer, unsigned int size) const {
+        if (size != getSize()) {
             return false;
         }
         
-        // Copy the entire data buffer
-        for (size_t i = 0; i < size; i++) {
-            buffer[i] = data[i];
+        // Copy the table values to the  buffer
+        for (unsigned int i = 0; i < xSize*ySize; i++) {
+            buffer[i] = values[i];
+        }
+
+        // Copy the X values to the  buffer
+        for (unsigned int i = 0; i < xSize; i++) {
+            buffer[i+getDataSize()] = axisX[i];
+        }
+
+        // Copy the Y values to the  buffer
+        for (unsigned int i = 0; i < ySize; i++) {
+            buffer[i+getDataSize()+getXAxisDataSize()] = axisY[i];
         }
         
         return true;
     }
 
     /**
-     * Get Data Size.
-     * @return size of the data in bytes.
-     */
-    static constexpr int getDataSize(){
-        // Values, xAxis, yAxis
-        return xSize*ySize*sizeof(T) + xSize*sizeof(XAxisT) + ySize*sizeof(YAxisT) + 1;
-    }
-    
-    // The data is stored here.
-    char data[getDataSize()] = {0};
-
-    /**
      * Reset the data to zero.
      */
     void resetData(){
-        for(unsigned int i = 0; i < getDataSize(); i++){
-            data[i] = 0x00;  
-        }
-        dataPointer = 0;
+        for(auto& e : values) e = 0;
+        for(auto& e : axisX) e = 0;
+        for(auto& e : axisY) e = 0;
     }
 
     /**
@@ -355,11 +354,19 @@ public:
         cacheIsValid = false;
     }
 
+    /**
+     * Get Size.
+     * @return size of the table in bytes.
+     */
+    static constexpr unsigned int getSize(){
+        return getDataSize() + getXAxisDataSize() + getYAxisDataSize();
+    }
+
 protected:
     // table values.
-    T* values; // x * ySize + y
-    XAxisT* axisX;
-    YAxisT* axisY;
+    T values[xSize*ySize*sizeof(T)] = {0};
+    XAxisT axisX[xSize*sizeof(XAxisT)] = {0};
+    YAxisT axisY[ySize*sizeof(YAxisT)] = {0};
     
 private:
     // caching.
@@ -369,22 +376,27 @@ private:
     bool cacheIsValid;
 
     /**
-     * Data Ptr.
+     * Get the Data size.
+     * @return size of the table data in bytes.
      */
-    unsigned int dataPointer = 0;
+    static constexpr unsigned int getDataSize(){
+        return xSize*ySize*sizeof(T);
+    }
 
     /**
-     * Alloca Data.
-     * @param size Size of data to allocate.
-     * @returns Pointer to allocated data or nullptr if allocation failed.
+     * Get the X Axis size.
+     * @return size of the x axis data in bytes.
      */
-    constexpr void* allocData(unsigned int size){
-        char* ptr = nullptr;
-        if(size < getDataSize()-dataPointer){
-            ptr = &data[dataPointer];
-        }
-        dataPointer+=size;
-        return ptr;
+    static constexpr unsigned int getXAxisDataSize(){
+        return xSize*sizeof(XAxisT);
+    }
+
+    /**
+     * Get the Y Axis size.
+     * @return size of the y axis data in bytes.
+     */
+    static constexpr unsigned int getYAxisDataSize(){
+        return ySize*sizeof(YAxisT);
     }
 
     /** 

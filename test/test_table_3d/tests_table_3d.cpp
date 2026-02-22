@@ -187,9 +187,9 @@ void test_copyData()
 
   bool result = testMap.setValue(x_axis, y_axis, 57);
 
-  // copy data
-  char copyData[testMap.getDataSize()] = {0};
-  memcpy(&copyData, &testMap.data, testMap.getDataSize());
+  // load data
+  char copyData[testMap.getSize()] = {0};
+  testMap.saveData(copyData, testMap.getSize());
   
   // change value 
   result = testMap.setValue(x_axis, y_axis, 32);
@@ -197,8 +197,8 @@ void test_copyData()
   double value = testMap.getValue(x_axis, y_axis);
   TEST_ASSERT_EQUAL(32, value);
 
-  // copy data back...
-  memcpy(&testMap.data, &copyData, testMap.getDataSize());
+  // load data back...
+  testMap.loadData(copyData, testMap.getSize());
   // Clear cache
   testMap.invalidateCache();
 

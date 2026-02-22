@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     Table<std::uint32_t, xSize, ySize> map;
 
     std::cout << "Table library" << std::endl;
-    std::cout << "DataSize: " << std::to_string(map.getDataSize()) << std::endl;
+    std::cout << "DataSize: " << std::to_string(map.getSize()) << std::endl;
     map.initialise();
 
     // Axis data
