@@ -16,6 +16,8 @@ calibration, sensor conversion, control maps, and other embedded lookup tasks.
 The portable core is C11, the fixed-storage facade is C++11, and neither path
 allocates heap memory.
 
+Documentation: https://epicecu.github.io/table/
+
 ## Highlights
 
 - Caller-owned C storage and compile-time-sized C++ storage.
