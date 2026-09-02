@@ -692,7 +692,7 @@ mod tests {
 
     #[test]
     fn preserves_inline_doxygen_text_boundaries() {
-        let xml = r#"<para>Cells indexed as <computeroutput>[<ref>y</ref>][<ref>x</ref>]</computeroutput>. </para>"#;
+        let xml = r"<para>Cells indexed as <computeroutput>[<ref>y</ref>][<ref>x</ref>]</computeroutput>. </para>";
         let document = roxmltree::Document::parse(xml).expect("test XML is valid");
         assert_eq!(
             node_text(document.root_element()),
