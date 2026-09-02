@@ -84,6 +84,7 @@ jobs:
         with:
           path: ${{ runner.temp }}/epicecu-table-arduino
           compliance: strict
+          library-manager: false
           project-type: library
 
   arduino:
