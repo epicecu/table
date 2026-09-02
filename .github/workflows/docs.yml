@@ -49,9 +49,9 @@ jobs:
           TABLE_DOCS_VERSIONS: '[{"label":"Latest","url":"https://epicecu.github.io/table/"}]'
       - if: github.event_name != 'pull_request'
         run: task docs:versions:build DOCS_SITE_ORIGIN=https://epicecu.github.io DOCS_PROJECT_BASE=/table/
-      - uses: actions/configure-pages@v4
+      - uses: actions/configure-pages@v5
         if: github.event_name != 'pull_request'
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         if: github.event_name != 'pull_request'
         with:
           path: build/docs/site
