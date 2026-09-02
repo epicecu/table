@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+tasks:
+  rust:format:
+    desc: Format owned Rust source
+    cmds:
+      - cargo fmt --all
+
+  rust:format-check:
+    desc: Verify owned Rust source formatting
+    cmds:
+      - cargo fmt --all -- --check
+
+  rust:proto:
+    desc: Regenerate checked-in Prost bindings
+    cmds:
+      - cargo run --locked -p table-rust-proto
+
+  rust:proto-check:
+    desc: Verify checked-in Prost bindings match table.v1
+    cmds:
+      - cargo run --locked -p table-rust-proto -- --check
+
+  rust:lint:
+    desc: Run warning-free Clippy across the Rust workspace
+    cmds:
+      - cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+
+  rust:docs:
+    desc: Build warning-free Rust API documentation
+    env:
+      RUSTDOCFLAGS: -D warnings
+    cmds:
+      - cargo doc --locked --workspace --all-features --no-deps
+
+  rust:test:
+    desc: Test default and Prost-enabled Rust APIs
+    cmds:
+      - cargo test --locked --workspace
+      - cargo test --locked -p table --features prost
+
+  rust:coverage:
+    desc: Enforce owned safe Rust source coverage
+    cmds:
+      - >-
+        cargo llvm-cov --locked --workspace --all-features
+        --exclude table-sys --exclude table-docs-api --exclude table-rust-proto
+        --ignore-filename-regex '(^|/)(build\.rs|tests?/|generated/)'
+        --fail-under-lines 85
+
+  rust:all:
+    desc: Run the complete Rust binding gate
+    cmds:
+      - task: rust:format-check
+      - task: rust:proto-check
+      - task: rust:lint
+      - task: rust:docs
+      - task: rust:test

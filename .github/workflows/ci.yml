@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: arduino/setup-task@v3
+        with:
+          version: 3.52.0
+          repo-token: ${{ github.token }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y clang-format-18 doxygen
+      - run: python -m pip install protobuf==5.28.3 grpcio-tools==1.68.0
+      - run: task quality:format-check
+      - run: task protocol:check PYTHON=python
+      - run: task quality:docs
+
+  native:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cc: gcc
+            cxx: g++
+          - cc: clang
+            cxx: clang++
+    steps:
+      - uses: actions/checkout@v5
+      - uses: arduino/setup-task@v3
+        with:
+          version: 3.52.0
+          repo-token: ${{ github.token }}
+      - run: task native:test CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: arduino/setup-task@v3
+        with:
+          version: 3.52.0
+          repo-token: ${{ github.token }}
+      - run: task native:sanitize
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: arduino/setup-task@v3
+        with:
+          version: 3.52.0
+          repo-token: ${{ github.token }}
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y gcovr
+      - run: task quality:coverage
+
+  packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: arduino/setup-task@v3
+        with:
+          version: 3.52.0
+          repo-token: ${{ github.token }}
+      - run: task package:cmake
+      - run: cmake -DROOT=${{ github.workspace }} -DOUTPUT=${{ runner.temp }}/epicecu-table-arduino -P cmake/stage_arduino.cmake
+      - uses: arduino/arduino-lint-action@v3
+        with:
+          path: ${{ runner.temp }}/epicecu-table-arduino
+          compliance: strict
+          library-manager: false
+          project-type: library
+
+  arduino:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: arduino/setup-task@v3
+        with:
+          version: 3.52.0
+          repo-token: ${{ github.token }}
+      - run: task arduino:check
+
+  rust:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+          components: clippy,rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - uses: arduino/setup-task@v3
+        with:
+          version: 3.52.0
+          repo-token: ${{ github.token }}
+      - run: task rust:all
+
+  rust-coverage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov@0.8.6
+      - uses: arduino/setup-task@v3
+        with:
+          version: 3.52.0
+          repo-token: ${{ github.token }}
+      - uses: Swatinem/rust-cache@v2
+      - run: task rust:coverage

@@ -1,7 +1,8 @@
-Table   KEYWORD1
-3d  KEYWORD2
-2d  KEYWORD3
-3d table    KEYWORD4
-2d table    KEYWORD5
-fuel table    KEYWORD6
-ignition table    KEYWORD7
+Curve	KEYWORD1
+Map	KEYWORD1
+Status	KEYWORD1
+init	KEYWORD2
+lookup	KEYWORD2
+setX	KEYWORD2
+setY	KEYWORD2
+setCell	KEYWORD2

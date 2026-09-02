@@ -1,0 +1,15 @@
+# Public library functions intentionally have external linkage even though the
+# standalone library analysis does not include a consumer translation unit.
+misra-c2012-8.7:src/table/table.c
+
+# The generic scalar API validates its type tag before converting caller-owned
+# void storage to the selected fixed-width array type.
+misra-c2012-11.5:src/table/table.c
+
+# Advisory single-exit guidance is disapplied: guard clauses keep validation
+# and failure paths local and avoid deeply nested control flow.
+misra-c2012-15.5:src/table/table.c
+
+# The public tagged scalar representation deliberately uses one union; callers
+# and library accessors select its active member through the adjacent type tag.
+misra-c2012-19.2:src/table/table.h

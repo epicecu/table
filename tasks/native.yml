@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+tasks:
+  native:nanopb:
+    desc: Install the pinned Nanopb runtime used by optional adapter tests
+    cmds:
+      - cmake -E make_directory build/tooling
+      - curl -fL https://github.com/nanopb/nanopb/archive/refs/tags/0.4.9.1.tar.gz -o /tmp/table-nanopb-0.4.9.1.tar.gz
+      - cmake -E tar xzf /tmp/table-nanopb-0.4.9.1.tar.gz
+      - cmake -E rename nanopb-0.4.9.1 build/tooling/nanopb
+    status:
+      - test -f {{.NANOPB_ROOT}}/pb_encode.c
+      - grep -q 'nanopb-0.4.9.1' {{.NANOPB_ROOT}}/pb.h
+
+  native:configure:
+    desc: Configure native validation
+    deps: [native:nanopb]
+    cmds:
+      - >-
+        cmake -S . -B {{.BUILD_DIR}}
+        -DCMAKE_C_COMPILER={{.CC}}
+        -DCMAKE_CXX_COMPILER={{.CXX}}
+        -DFETCHCONTENT_BASE_DIR={{.ROOT_DIR}}/build/_deps
+        {{if .GOOGLETEST_SOURCE}}-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST={{.GOOGLETEST_SOURCE}}{{end}}
+        -DTABLE_BUILD_TESTS=ON
+        -DTABLE_BUILD_EXAMPLES=ON
+        -DTABLE_BUILD_NANOPB=ON
+        -DTABLE_NANOPB_ROOT={{.ROOT_DIR}}/{{.NANOPB_ROOT}}
+
+  native:build:
+    desc: Build native validation targets
+    deps: [native:configure]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} --parallel
+
+  native:test:
+    desc: Run native C, C++, and Nanopb tests
+    deps: [native:build]
+    cmds:
+      - ctest --test-dir {{.BUILD_DIR}} --output-on-failure
+      - '{{.ROOT_DIR}}/{{.BUILD_DIR}}/table_c_example'
+      - '{{.ROOT_DIR}}/{{.BUILD_DIR}}/table_cpp_example'
+
+  native:check:
+    desc: Build owned code with strict GCC and Clang warnings
+    deps: [native:nanopb]
+    cmds:
+      - >-
+        cmake -S . -B build/check-gcc
+        -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+        -DFETCHCONTENT_BASE_DIR={{.ROOT_DIR}}/build/_deps
+        {{if .GOOGLETEST_SOURCE}}-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST={{.GOOGLETEST_SOURCE}}{{end}}
+        -DTABLE_BUILD_TESTS=ON
+        -DTABLE_BUILD_EXAMPLES=ON
+        -DTABLE_BUILD_NANOPB=ON
+        -DTABLE_NANOPB_ROOT={{.ROOT_DIR}}/{{.NANOPB_ROOT}}
+        -DTABLE_WARNINGS_AS_ERRORS=ON
+      - cmake --build build/check-gcc --parallel
+      - >-
+        cmake -S . -B build/check-clang
+        -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        -DFETCHCONTENT_BASE_DIR={{.ROOT_DIR}}/build/_deps
+        {{if .GOOGLETEST_SOURCE}}-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST={{.GOOGLETEST_SOURCE}}{{end}}
+        -DTABLE_BUILD_TESTS=ON
+        -DTABLE_BUILD_EXAMPLES=ON
+        -DTABLE_BUILD_NANOPB=ON
+        -DTABLE_NANOPB_ROOT={{.ROOT_DIR}}/{{.NANOPB_ROOT}}
+        -DTABLE_WARNINGS_AS_ERRORS=ON
+      - cmake --build build/check-clang --parallel
+
+  native:sanitize:
+    desc: Run native tests with address and undefined-behaviour sanitizers
+    deps: [native:nanopb]
+    cmds:
+      - >-
+        cmake -S . -B build/sanitize
+        -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+        -DFETCHCONTENT_BASE_DIR={{.ROOT_DIR}}/build/_deps
+        {{if .GOOGLETEST_SOURCE}}-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST={{.GOOGLETEST_SOURCE}}{{end}}
+        -DTABLE_BUILD_TESTS=ON
+        -DTABLE_BUILD_NANOPB=ON
+        -DTABLE_NANOPB_ROOT={{.ROOT_DIR}}/{{.NANOPB_ROOT}}
+        -DTABLE_ENABLE_SANITIZERS=ON
+      - cmake --build build/sanitize --parallel
+      - ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/sanitize --output-on-failure
