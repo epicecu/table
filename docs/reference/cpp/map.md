@@ -35,7 +35,7 @@ Status table::Map< ValueT, XCount, YCount, XAxisT, YAxisT >::init(const XAxisT(&
 
 Copies and validates a complete two-dimensional row-major map.
 
-xAxis Strictly increasing X-axis points. yAxis Strictly increasing Y-axis points. cells Cells indexed as [ y ][ x ] . Operation status.
+xAxis Strictly increasing X-axis points. yAxis Strictly increasing Y-axis points. cells Cells indexed as [y][x]. Operation status.
 
 ## `isReady`
 

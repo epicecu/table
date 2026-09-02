@@ -4,5 +4,5 @@ endif()
 
 file(REMOVE_RECURSE "${OUTPUT}")
 file(MAKE_DIRECTORY "${OUTPUT}")
-file(COPY "${ROOT}/src" "${ROOT}/examples" "${ROOT}/docs" "${ROOT}/extras" "${ROOT}/proto" "${ROOT}/support" DESTINATION "${OUTPUT}")
+file(COPY "${ROOT}/src" "${ROOT}/examples" "${ROOT}/docs" "${ROOT}/extras" "${ROOT}/proto" DESTINATION "${OUTPUT}")
 file(COPY "${ROOT}/README.md" "${ROOT}/CHANGELOG.md" "${ROOT}/LICENSE" "${ROOT}/library.properties" "${ROOT}/library.json" "${ROOT}/keywords.txt" DESTINATION "${OUTPUT}")

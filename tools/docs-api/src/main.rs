@@ -184,7 +184,7 @@ fn node_text(node: Node<'_, '_>) -> String {
             .filter(roxmltree::Node::is_text)
             .filter_map(|descendant| descendant.text())
             .collect::<Vec<_>>()
-            .join(" "),
+            .join(""),
     )
 }
 
@@ -661,7 +661,7 @@ fn collect_markdown(
 
 #[cfg(test)]
 mod tests {
-    use super::{RustApi, clean_space, rust_docs, xml_entries};
+    use super::{RustApi, clean_space, node_text, rust_docs, xml_entries};
 
     #[test]
     fn normalises_generated_whitespace() {
@@ -688,6 +688,16 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].signature, "typedef enum state state_t");
         assert!(entries[0].docs.contains("`STATE_OK`"));
+    }
+
+    #[test]
+    fn preserves_inline_doxygen_text_boundaries() {
+        let xml = r#"<para>Cells indexed as <computeroutput>[<ref>y</ref>][<ref>x</ref>]</computeroutput>. </para>"#;
+        let document = roxmltree::Document::parse(xml).expect("test XML is valid");
+        assert_eq!(
+            node_text(document.root_element()),
+            "Cells indexed as [y][x]."
+        );
     }
 
     #[test]
