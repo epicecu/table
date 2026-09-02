@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+tasks:
+  package:cmake:
+    desc: Verify the installed CMake package with C and C++ consumers
+    deps: [native:build]
+    cmds:
+      - cmake -E remove_directory /tmp/table-install
+      - cmake -E remove_directory build/package-consumer
+      - cmake --install {{.BUILD_DIR}} --prefix /tmp/table-install
+      - cmake -S tests/integration/package -B build/package-consumer -DCMAKE_PREFIX_PATH=/tmp/table-install
+      - cmake --build build/package-consumer --parallel
+      - '{{.ROOT_DIR}}/build/package-consumer/table_package_c'
+      - '{{.ROOT_DIR}}/build/package-consumer/table_package_cpp'
+
+  package:arduino:
+    desc: Validate manually installed Arduino library structure and metadata
+    cmds:
+      - cmake -DROOT={{.ROOT_DIR}} -DOUTPUT=/tmp/table-arduino -P cmake/stage_arduino.cmake
+      - '{{.ARDUINO_LINT}} --compliance strict --library-manager false /tmp/table-arduino'
+    preconditions:
+      - sh: command -v {{.ARDUINO_LINT}}
+        msg: arduino-lint is required for the package check

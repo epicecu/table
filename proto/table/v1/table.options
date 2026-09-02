@@ -1,0 +1,3 @@
+table.v1.ScalarArray.signed_values type:FT_CALLBACK
+table.v1.ScalarArray.unsigned_values type:FT_CALLBACK
+table.v1.ScalarArray.float_values type:FT_CALLBACK

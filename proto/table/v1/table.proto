@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package table.v1;
+
+enum ScalarType {
+  SCALAR_TYPE_UNSPECIFIED = 0;
+  SCALAR_TYPE_I8 = 1;
+  SCALAR_TYPE_U8 = 2;
+  SCALAR_TYPE_I16 = 3;
+  SCALAR_TYPE_U16 = 4;
+  SCALAR_TYPE_I32 = 5;
+  SCALAR_TYPE_U32 = 6;
+  SCALAR_TYPE_F32 = 7;
+}
+
+message ScalarArray {
+  ScalarType type = 1;
+  repeated sint32 signed_values = 2 [packed = true];
+  repeated uint32 unsigned_values = 3 [packed = true];
+  repeated float float_values = 4 [packed = true];
+}
+
+message Curve {
+  ScalarArray x_axis = 1;
+  ScalarArray cells = 2;
+}
+
+message Map {
+  ScalarArray x_axis = 1;
+  ScalarArray y_axis = 2;
+  ScalarArray cells = 3;
+}

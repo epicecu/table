@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+vars:
+  CLANG_FORMAT: '{{default "build/tooling/clang-format-18/usr/bin/clang-format-18" .CLANG_FORMAT}}'
+  DOXYGEN: '{{default "doxygen" .DOXYGEN}}'
+  GCOVR: '{{default "gcovr" .GCOVR}}'
+
+tasks:
+  protocol:check:
+    desc: Verify checked-in Nanopb sources match the public schema
+    deps: [native:nanopb]
+    cmds:
+      - >-
+        cmake -DROOT={{.ROOT_DIR}}
+        -DPYTHON={{.PYTHON}}
+        -DNANOPB_GENERATOR={{.NANOPB_GENERATOR}}
+        -P cmake/check_proto.cmake
+    preconditions:
+      - sh: test -f {{.NANOPB_GENERATOR}}
+        msg: The Nanopb generator is required to verify generated sources
+
+  quality:format-setup:
+    desc: Provision pinned ClangFormat 18 locally when needed
+    cmds:
+      - cmake -DROOT={{.ROOT_DIR}} -DOUTPUT={{.ROOT_DIR}}/build/tooling/clang-format-18 -P cmake/setup_clang_format.cmake
+    status:
+      - '{{.CLANG_FORMAT}} --version | grep -q ''version 18\.'''
+
+  quality:format:
+    desc: Format owned source with pinned ClangFormat 18
+    deps: [quality:format-setup]
+    cmds:
+      - '{{.PYTHON}} tools/check_signatures.py --fix'
+      - cmake -DROOT={{.ROOT_DIR}} -DCLANG_FORMAT={{.CLANG_FORMAT}} -DMODE=APPLY -P cmake/format_owned.cmake
+      - task: rust:format
+
+  quality:format-check:
+    desc: Verify source formatting and one-line function signatures
+    deps: [quality:format-setup]
+    cmds:
+      - cmake -DROOT={{.ROOT_DIR}} -DCLANG_FORMAT={{.CLANG_FORMAT}} -DMODE=CHECK -P cmake/format_owned.cmake
+      - '{{.PYTHON}} tools/check_signatures.py'
+      - task: rust:format-check
+
+  quality:docs:
+    desc: Build API documentation and lint owned symbol comments
+    cmds:
+      - cmake -E make_directory build/docs/api build/docs/lint
+      - '{{.DOXYGEN}} docs/Doxyfile'
+      - '{{.DOXYGEN}} docs/Doxyfile.lint'
+    preconditions:
+      - sh: command -v {{.DOXYGEN}}
+        msg: Doxygen is required to build API documentation
+
+  quality:misra:
+    desc: Run blocking MISRA C:2012 analysis on the core C library
+    cmds:
+      - >-
+        {{.CPPCHECK}} src/table/table.c
+        --std=c11 --language=c --platform=unix32 -Isrc
+        '-DUINT32_C(value)=value##U'
+        --addon=config/cppcheck/misra.json
+        --suppressions-list=config/cppcheck/misra-suppressions.txt
+        --enable=warning,style,performance,portability
+        --suppress=missingIncludeSystem --error-exitcode=1
+        --template='{file}:{line}:{column}: {severity}: {message} [{id}]'
+      - >-
+        {{.CPPCHECK}} src/table/table.c
+        --std=c11 --language=c --platform=unix64 -Isrc
+        '-DUINT32_C(value)=value##U'
+        --addon=config/cppcheck/misra.json
+        --suppressions-list=config/cppcheck/misra-suppressions.txt
+        --enable=warning,style,performance,portability
+        --suppress=missingIncludeSystem --error-exitcode=1
+        --template='{file}:{line}:{column}: {severity}: {message} [{id}]'
+    preconditions:
+      - sh: '{{.CPPCHECK}} --version'
+        msg: Cppcheck with its MISRA addon is required
+
+  quality:coverage:
+    desc: Generate line and branch coverage reports
+    deps: [native:nanopb]
+    cmds:
+      - cmake -E remove_directory build/coverage
+      - >-
+        cmake -S . -B build/coverage
+        -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+        -DFETCHCONTENT_BASE_DIR={{.ROOT_DIR}}/build/_deps
+        {{if .GOOGLETEST_SOURCE}}-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST={{.GOOGLETEST_SOURCE}}{{end}}
+        -DTABLE_BUILD_TESTS=ON
+        -DTABLE_BUILD_NANOPB=ON
+        -DTABLE_NANOPB_ROOT={{.ROOT_DIR}}/{{.NANOPB_ROOT}}
+        -DTABLE_ENABLE_COVERAGE=ON
+      - cmake --build build/coverage --parallel
+      - ctest --test-dir build/coverage --output-on-failure
+      - cmake -E make_directory build/coverage/report
+      - >-
+        {{.GCOVR}} --root . build/coverage
+        --filter src/table/
+        --filter extras/nanopb/table/nanopb.c
+        --exclude '.*\.pb\.[ch]$'
+        --txt build/coverage/report/coverage.txt
+        --html-details build/coverage/report/index.html
+        --xml build/coverage/report/coverage.xml
+        --xml-pretty --print-summary --fail-under-line 85
+    preconditions:
+      - sh: command -v {{.GCOVR}}
+        msg: gcovr is required to generate coverage reports

@@ -1,0 +1,21 @@
+{
+  "name": "Table",
+  "version": "1.0.0",
+  "description": "Heap-free lookup curves and maps for embedded C and C++",
+  "keywords": ["ecu", "interpolation", "lookup-table", "curve", "map"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/epicecu/table.git"
+  },
+  "authors": [
+    {
+      "name": "David Cedar",
+      "email": "david@epicecu.com",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": "*",
+  "headers": ["Table.h"]
+}

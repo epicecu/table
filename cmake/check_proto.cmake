@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: MIT
+
+if(NOT DEFINED ROOT OR NOT DEFINED PYTHON OR NOT DEFINED NANOPB_GENERATOR)
+  message(FATAL_ERROR "ROOT, PYTHON, and NANOPB_GENERATOR are required")
+endif()
+
+set(PROTO_RELATIVE table/v1/table)
+set(PROTO_ROOT "${ROOT}/proto")
+set(PROTO_FILE "${PROTO_ROOT}/${PROTO_RELATIVE}.proto")
+set(OPTIONS_FILE "${PROTO_ROOT}/${PROTO_RELATIVE}.options")
+set(OUTPUT_ROOT "${ROOT}/build/proto-check")
+set(CHECKED_ROOT "${ROOT}/extras/nanopb")
+
+file(REMOVE_RECURSE "${OUTPUT_ROOT}")
+file(MAKE_DIRECTORY "${OUTPUT_ROOT}")
+
+execute_process(
+  COMMAND
+    "${PYTHON}" "${NANOPB_GENERATOR}"
+    -I "${PROTO_ROOT}"
+    -D "${OUTPUT_ROOT}"
+    -f "${OPTIONS_FILE}"
+    --error-on-unmatched
+    "${PROTO_FILE}"
+  RESULT_VARIABLE GENERATOR_RESULT
+  OUTPUT_VARIABLE GENERATOR_OUTPUT
+  ERROR_VARIABLE GENERATOR_ERROR
+)
+
+if(NOT GENERATOR_RESULT EQUAL 0)
+  message(FATAL_ERROR "Nanopb generation failed:\n${GENERATOR_OUTPUT}${GENERATOR_ERROR}")
+endif()
+
+foreach(EXTENSION IN ITEMS h c)
+  set(GENERATED "${OUTPUT_ROOT}/${PROTO_RELATIVE}.pb.${EXTENSION}")
+  set(CHECKED "${CHECKED_ROOT}/${PROTO_RELATIVE}.pb.${EXTENSION}")
+  file(READ "${GENERATED}" GENERATED_CONTENT)
+  file(READ "${CHECKED}" CHECKED_CONTENT)
+  string(REGEX REPLACE "[ \t\r\n]" "" GENERATED_CONTENT "${GENERATED_CONTENT}")
+  string(REGEX REPLACE "[ \t\r\n]" "" CHECKED_CONTENT "${CHECKED_CONTENT}")
+  if(NOT GENERATED_CONTENT STREQUAL CHECKED_CONTENT)
+    message(FATAL_ERROR "${CHECKED} is stale; regenerate it with Nanopb 0.4.9.1")
+  endif()
+endforeach()
+
+message(STATUS "Checked-in Nanopb sources match ${PROTO_FILE}")

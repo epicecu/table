@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+includes:
+  native:
+    taskfile: ./tasks/native.yml
+    flatten: true
+    dir: .
+  arduino:
+    taskfile: ./tasks/arduino.yml
+    flatten: true
+    dir: .
+  packages:
+    taskfile: ./tasks/packages.yml
+    flatten: true
+    dir: .
+  quality:
+    taskfile: ./tasks/quality.yml
+    flatten: true
+    dir: .
+  rust:
+    taskfile: ./tasks/rust.yml
+    flatten: true
+    dir: .
+
+vars:
+  BUILD_DIR: '{{default "build/native" .BUILD_DIR}}'
+  CC: '{{default "cc" .CC}}'
+  CXX: '{{default "c++" .CXX}}'
+  CPPCHECK: '{{default "cppcheck" .CPPCHECK}}'
+  PYTHON: '{{default "python3" .PYTHON}}'
+  ARDUINO_CLI: '{{default "build/tooling/arduino-cli" .ARDUINO_CLI}}'
+  ARDUINO_LINT: '{{default "arduino-lint" .ARDUINO_LINT}}'
+  NANOPB_ROOT: '{{default "build/tooling/nanopb" .NANOPB_ROOT}}'
+  NANOPB_GENERATOR: '{{default (printf "%s/generator/nanopb_generator.py" .NANOPB_ROOT) .NANOPB_GENERATOR}}'
+  GOOGLETEST_SOURCE: '{{default "" .GOOGLETEST_SOURCE}}'
+
+env:
+  ARDUINO_DIRECTORIES_DATA: '{{.ROOT_DIR}}/build/tooling/arduino/data'
+  ARDUINO_DIRECTORIES_DOWNLOADS: '{{.ROOT_DIR}}/build/tooling/arduino/downloads'
+  ARDUINO_DIRECTORIES_USER: '{{.ROOT_DIR}}/build/tooling/arduino/user'
+
+tasks:
+  default:
+    cmds:
+      - task: quick
+
+  setup:
+    desc: Verify required native development tools
+    cmds:
+      - cmake --version
+      - '{{.CC}} --version'
+      - '{{.CXX}} --version'
+      - ctest --version
+      - '{{.CPPCHECK}} --version'
+      - rustc --version
+      - cargo --version
+
+  quick:
+    desc: Configure, build, and test the native and Rust Table APIs
+    cmds:
+      - task: native:test
+      - task: rust:test
+
+  test:
+    desc: Run the complete native and Rust test suites
+    cmds:
+      - task: native:test
+      - task: rust:test
+
+  check:
+    desc: Build with strict GCC and Clang warnings
+    cmds:
+      - task: native:check
+
+  all:
+    desc: Run the complete software release gate
+    cmds:
+      - task: quality:format-check
+      - task: protocol:check
+      - task: quality:misra
+      - task: rust:all
+      - task: quality:docs
+      - task: native:check
+      - task: native:test
+      - task: native:sanitize
+      - task: quality:coverage
+      - task: rust:coverage
+      - task: package:cmake
+      - task: package:arduino
+      - task: arduino:check
+
+  clean:
+    desc: Remove generated build output
+    cmds:
+      - cmake -E remove_directory build

@@ -1,0 +1,19 @@
+[package]
+name = "table"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Safe owning Rust bindings for C lookup curves and maps"
+
+[features]
+default = []
+prost = ["dep:prost"]
+
+[dependencies]
+prost = { workspace = true, optional = true }
+table-sys = { version = "1.0.0", path = "../.." }
+
+[lints]
+workspace = true
