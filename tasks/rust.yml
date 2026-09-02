@@ -45,7 +45,7 @@ tasks:
     cmds:
       - >-
         cargo llvm-cov --locked --workspace --all-features
-        --exclude table-sys --exclude table-rust-proto
+        --exclude table-sys --exclude table-docs-api --exclude table-rust-proto
         --ignore-filename-regex '(^|/)(build\.rs|tests?/|generated/)'
         --fail-under-lines 85
 

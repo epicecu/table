@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="support/epicecu-tables-logo.png" alt="Table" width="400" />
+<img src="docs/public/epicecu-tables-logo.png" alt="Table" width="400" />
 
 ### Heap-free lookup curves and maps for embedded C and C++
 
@@ -8,6 +8,7 @@
 
 [![CI](https://github.com/epicecu/table/actions/workflows/ci.yml/badge.svg)](https://github.com/epicecu/table/actions/workflows/ci.yml)
 [![MISRA C Analysis](https://github.com/epicecu/table/actions/workflows/misra.yml/badge.svg)](https://github.com/epicecu/table/actions/workflows/misra.yml)
+[![Documentation](https://github.com/epicecu/table/actions/workflows/docs.yml/badge.svg)](https://epicecu.github.io/table/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Table provides validated linear and bilinear interpolation for ECU
@@ -158,6 +159,10 @@ task check                 # Strict GCC and Clang builds.
 task quality:format-check  # Verify Corelib-aligned source style.
 task quality:misra         # Run core MISRA C:2012 analysis.
 task quality:coverage      # Enforce 85% owned-source line coverage.
+task docs:api              # Regenerate committed API reference pages.
+task docs:build            # Build documentation for the current checkout.
+task docs:versions:build   # Build Latest and retained release documentation.
+task docs:serve            # Serve documentation at http://localhost:8000.
 task all                   # Run the complete release gate.
 ```
 
@@ -168,8 +173,15 @@ test checks specifically for the Rust binding.
 the core C implementation. It provides partial MISRA C:2012 automated analysis,
 not a formal compliance claim; see [the scope and accepted findings](docs/misra.md).
 
-Build output and bootstrapped tools remain below `build/`. The optional Nanopb
-runtime and test-only GoogleTest dependency are fetched only for development.
+Build output and bootstrapped native tools remain below `build/`. Locked
+VitePress dependencies are installed under ignored `node_modules/`. The optional
+Nanopb runtime and test-only GoogleTest dependency are fetched only for
+development.
+
+The published documentation uses `main` as **Latest**. Numeric stable SemVer
+tags are published separately, retaining the newest patch from every minor
+release line. Versioned publishing starts with the first tag that contains the
+VitePress documentation toolchain; legacy tags are not backfilled.
 
 ## Integration constraints
 

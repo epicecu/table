@@ -1,11 +1,13 @@
 PROJECT_NAME           = "Table"
 PROJECT_NUMBER         = 1.0.0
 OUTPUT_DIRECTORY       = build/docs/api
-INPUT                  = src/table docs
+INPUT                  = src/table
 RECURSIVE              = YES
-FILE_PATTERNS          = *.h *.hpp *.md
-GENERATE_HTML           = YES
+FILE_PATTERNS          = *.h *.hpp
+GENERATE_HTML           = NO
 GENERATE_LATEX          = NO
+GENERATE_XML            = YES
+XML_PROGRAMLISTING      = NO
 HAVE_DOT                = NO
 WARN_IF_UNDOCUMENTED    = YES
 WARN_IF_DOC_ERROR       = YES

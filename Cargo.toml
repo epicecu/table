@@ -10,7 +10,7 @@ description = "Raw Rust bindings for the Table C lookup library"
 
 [workspace]
 resolver = "2"
-members = ["rust/table", "tools/rust-proto"]
+members = ["rust/table", "tools/docs-api", "tools/rust-proto"]
 default-members = [".", "rust/table"]
 
 [workspace.package]
@@ -24,6 +24,9 @@ repository = "https://github.com/epicecu/table"
 prost = "0.14"
 prost-build = "0.14"
 protoc-bin-vendored = "3"
+quote = "1"
+roxmltree = "0.20"
+syn = { version = "2", features = ["full"] }
 
 [build-dependencies]
 cc = "1"

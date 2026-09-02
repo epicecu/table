@@ -22,10 +22,15 @@ to the Protobuf contract require regeneration checks and compatibility tests.
 Rust binding changes additionally require `task rust:all`; use
 `task rust:proto` only after editing the canonical `table.v1` schema.
 Core C changes additionally require `task quality:misra`; any new suppression
-requires a bounded rationale in `docs/misra.md`.
+requires a bounded rationale in `docs/misra.md`. Run `task docs:api` after
+changing a documented public C, C++, or Rust interface.
 
-Follow [the repository source style](docs/style.md). Do not manually edit or
+Follow [the repository source style][source-style]. Do not manually edit or
 format generated Nanopb files. Keep hardware-specific code outside the portable
 core and preserve the no-heap contract.
 
-Report security issues privately as described in [SECURITY.md](SECURITY.md).
+Report security issues as described in the
+[security policy][security-policy].
+
+[security-policy]: https://github.com/epicecu/table/blob/main/SECURITY.md
+[source-style]: https://github.com/epicecu/table/blob/main/docs/style.md

@@ -53,6 +53,9 @@ tasks:
       - '{{.CXX}} --version'
       - ctest --version
       - '{{.CPPCHECK}} --version'
+      - doxygen --version
+      - node --version
+      - npm --version
       - rustc --version
       - cargo --version
 
@@ -80,7 +83,8 @@ tasks:
       - task: protocol:check
       - task: quality:misra
       - task: rust:all
-      - task: quality:docs
+      - task: docs:versions:check
+      - task: docs:build
       - task: native:check
       - task: native:test
       - task: native:sanitize

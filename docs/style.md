@@ -18,7 +18,9 @@ Use conventional US English for source identifiers. Do not rename generated or
 protocol-defined identifiers to enforce this convention.
 
 Generated Protobuf/Nanopb files retain generator formatting and must not be
-edited manually. Apply formatting only to owned source using:
+edited manually. Generated API pages below `docs/reference` are derived from
+public source comments with `task docs:api` and must not be edited manually.
+Apply formatting only to owned source using:
 
 ```sh
 task quality:format

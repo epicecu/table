@@ -11,6 +11,8 @@
   the existing C implementation.
 - Added a dedicated blocking MISRA C:2012 analysis task, workflow, and status
   badge for the core C implementation.
+- Added a VitePress documentation site with generated native C, C++, and Rust
+  API reference pages, version navigation, and GitHub Pages deployment.
 - Standardised the public APIs on `Table.h`, `table::`, `table_*`, and
   `table.v1` naming.
 - Adopted MIT licensing and Corelib-aligned quality gates.
