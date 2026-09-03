@@ -6,8 +6,8 @@
 
 </div>
 
-[![CI](https://github.com/epicecu/table/actions/workflows/ci.yml/badge.svg)](https://github.com/epicecu/table/actions/workflows/ci.yml)
-[![MISRA C Analysis](https://github.com/epicecu/table/actions/workflows/misra.yml/badge.svg)](https://github.com/epicecu/table/actions/workflows/misra.yml)
+[![Testing](https://github.com/epicecu/table/actions/workflows/ci.yml/badge.svg)](https://github.com/epicecu/table/actions/workflows/ci.yml)
+[![MISRA C Compliance](https://github.com/epicecu/table/actions/workflows/misra.yml/badge.svg)](https://github.com/epicecu/table/actions/workflows/misra.yml)
 [![Documentation](https://github.com/epicecu/table/actions/workflows/docs.yml/badge.svg)](https://epicecu.github.io/table/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
