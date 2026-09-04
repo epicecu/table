@@ -1,6 +1,8 @@
 # Changelog
 
-## 1.0.0 - Unreleased
+## Unreleased
+
+## 1.0.0 - 2026-09-04
 
 - Replaced the legacy C++-only `Table` class with a portable C11 core.
 - Added fixed-storage C++11 `Curve` and `Map` facades.

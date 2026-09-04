@@ -115,11 +115,11 @@ fuel.set_cell(1, 1, 5.5).unwrap();
 
 Enable the optional `prost` feature for generated `table.v1` messages and
 validated snapshot conversions. Git consumers can select the safe package and
-pin an exact repository revision:
+pin the stable release tag:
 
 ```toml
 [dependencies]
-table = { git = "https://github.com/epicecu/table.git", rev = "<commit>", features = ["prost"] }
+table = { git = "https://github.com/epicecu/table.git", tag = "1.0.0", features = ["prost"] }
 ```
 
 The raw `table-sys` package is intended for language-integration work; ordinary

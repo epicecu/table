@@ -13,7 +13,7 @@ For PlatformIO, pin a release or commit in `platformio.ini`:
 
 ```ini
 lib_deps =
-  https://github.com/epicecu/table.git#<tag-or-commit>
+  https://github.com/epicecu/table.git#1.0.0
 ```
 
 The generic `Table` distribution name is not submitted to Arduino Library
@@ -40,11 +40,11 @@ Enable `TABLE_BUILD_NANOPB` only when providing a compatible Nanopb target or
 
 ## Rust
 
-Git consumers should select the safe package and pin an exact revision:
+Git consumers should select the safe package and pin the stable release tag:
 
 ```toml
 [dependencies]
-table = { git = "https://github.com/epicecu/table.git", rev = "<commit>" }
+table = { git = "https://github.com/epicecu/table.git", tag = "1.0.0" }
 ```
 
 Add `features = ["prost"]` when consuming the stable `table.v1` snapshot
